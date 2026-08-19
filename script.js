@@ -308,3 +308,29 @@ function triggerSteamTest(type) {
         unlockAchievement('伝説の勇者', 'badge3');
     }
 }
+
+// データをブラウザ（localStorage）に保存する関数
+function saveData() {
+    const gameState = {
+        level: currentLevel, // お使いのレベル変数名に変更してください
+        logs: nigateLogs     // お使いのログ変数名に変更してください
+    };
+    localStorage.setItem('studyQuestData', JSON.stringify(gameState));
+}
+
+// 保存されたデータを読み込んで復元する関数
+function loadData() {
+    const savedData = localStorage.getItem('studyQuestData');
+    if (savedData) {
+        const gameState = JSON.parse(savedData);
+        currentLevel = gameState.level;
+        nigateLogs = gameState.logs;
+        // 画面上のレベル表示やログ一覧を更新する関数をここで実行
+        updateUI(); 
+    }
+}
+
+// ページを開いたときに読み込みを実行
+window.addEventListener('DOMContentLoaded', () => {
+    loadData();
+});
