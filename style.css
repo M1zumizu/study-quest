@@ -491,3 +491,173 @@ body {
 .steam-text-container { margin-left: 12px; display: flex; flex-direction: column; }
 .steam-alert-title { color: var(--text-sub); font-size: 0.7rem; text-transform: uppercase; }
 .steam-badge-name { color: #e5c173; font-size: 0.95rem; font-weight: bold; margin-top: 2px; }
+
+/* ========================================
+   📱 スマホ・タブレット対応
+======================================== */
+
+@media screen and (max-width: 768px) {
+
+    /* ページ全体 */
+    body {
+        width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+
+    /* サイドバーを上部メニューに変更 */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: auto;
+
+        min-height: 60px;
+
+        display: flex;
+        align-items: center;
+
+        z-index: 1000;
+    }
+
+
+    /* サイドバー内のタイトル */
+    .sidebar h1,
+    .logo {
+        font-size: 18px;
+        margin: 0 10px;
+    }
+
+
+    /* メニューを横並びにする */
+    .sidebar-menu {
+        display: flex;
+        flex: 1;
+
+        justify-content: space-around;
+        align-items: center;
+
+        gap: 5px;
+    }
+
+
+    /* メニュー項目 */
+    .sidebar-item {
+        font-size: 11px;
+
+        padding: 8px 5px;
+
+        white-space: nowrap;
+    }
+
+
+    /* メインコンテンツ */
+    main,
+    .main-content,
+    .content {
+        margin-left: 0;
+        width: 100%;
+
+        padding: 80px 15px 20px;
+
+        box-sizing: border-box;
+    }
+
+
+    /* カード */
+    .card {
+        width: 100%;
+        min-width: 0;
+
+        box-sizing: border-box;
+    }
+
+
+    /* ホーム画面のカードを1列にする */
+    .view-home .dashboard,
+    .dashboard,
+    .card-container {
+        grid-template-columns: 1fr;
+
+        gap: 15px;
+    }
+
+
+    /* タイトル */
+    h1 {
+        font-size: 24px;
+    }
+
+
+    h2 {
+        font-size: 20px;
+    }
+
+
+    /* ボタン */
+    button {
+        max-width: 100%;
+
+        padding: 12px 16px;
+
+        font-size: 16px;
+    }
+
+
+    /* 入力欄 */
+    input,
+    textarea,
+    select {
+        width: 100%;
+
+        max-width: 100%;
+
+        box-sizing: border-box;
+
+        font-size: 16px;
+    }
+
+
+    /* EXPバー */
+    .exp-container,
+    .exp-bar {
+        width: 100%;
+
+        box-sizing: border-box;
+    }
+
+
+    /* 苦手問題など */
+    .log-item {
+        width: 100%;
+
+        box-sizing: border-box;
+
+        word-break: break-word;
+    }
+
+
+    /* クイズ部分 */
+    .quiz-container {
+        width: 100%;
+
+        box-sizing: border-box;
+    }
+
+
+    /* 正解・不正解ボタン */
+    .verify-buttons {
+        flex-direction: column;
+
+        width: 100%;
+    }
+
+
+    .verify-buttons button {
+        width: 100%;
+    }
+
+}
