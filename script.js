@@ -2,335 +2,1460 @@
 // 🎮 Study Quest - JavaScriptゲームロジック
 // ==========================================
 
+
+// ==========================================
+// 📊 基本データ
+// ==========================================
+
+// 現在の合計EXP
 let totalExp = 0;
+
+// 現在のレベル
 let currentLevel = 1;
+
+// タイマーの秒数
 let seconds = 0;
+
+// タイマーを管理する変数
 let timerInterval = null;
+
+// 現在表示している画面
 let currentView = 'home';
 
-const defaultQuizList = [
-    { q: "英単語『study』の意味は？", a: "勉強する" },
-    { q: "かけ算： 7 × 8 ＝ ？", a: "56" },
-    { q: "理科：水の化学式は？", a: "H2O" },
-    { q: "英単語『obvious』の意味は？", a: "明らかな" },
-    { q: "歴史：日本で最初の幕府は？", a: "鎌倉幕府" }
-];
+// 苦手問題を保存する配列
+let nigateLogs = [];
 
-let activeQuizList = [...defaultQuizList]; 
-let currentQuizIndex = 0; 
 
-// 画面切り替え
-function showView(viewName) {
-    currentView = viewName;
-    const cards = {
-        timer: document.getElementById('card-timer'),
-        weakness: document.getElementById('card-weakness'),
-        review: document.getElementById('card-review'),
-        achievement: document.getElementById('card-achievement')
-    };
+// ==========================================
+// 🏆 アチーブメントデータ
+// ==========================================
 
-    if (viewName === 'home') {
-        document.body.className = "view-home";
-        for (let key in cards) {
-            cards[key].classList.remove('hidden');
-        }
-        clearSidebarActive();
-    } else {
-        document.body.className = "view-single";
-        for (let key in cards) {
-            if (key === viewName) {
-                cards[key].classList.remove('hidden');
-            } else {
-                cards[key].classList.add('hidden');
-            }
-        }
-        updateSidebarActive(viewName);
-
-        if (viewName === 'timer') {
-            unlockAchievement('最初の一歩', 'badge1');
-        }
-    }
-}
-
-function handleCardClick(cardName) {
-    if (currentView === 'home') {
-        showView(cardName);
-    }
-}
-
-function goBackToHome(event) {
-    event.stopPropagation();
-    showView('home');
-}
-
-function clearSidebarActive() {
-    const items = document.querySelectorAll('.sidebar-item');
-    items.forEach(item => item.classList.remove('active'));
-}
-
-function updateSidebarActive(viewName) {
-    clearSidebarActive();
-    const activeItem = document.getElementById(`menu-${viewName}`);
-    if (activeItem) {
-        activeItem.classList.add('active');
-    }
-}
-
-// ⏱️ タイマー機能
-function startTimer(event) {
-    event.stopPropagation();
-    document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('stopBtn').style.display = 'inline-block';
-    
-    timerInterval = setInterval(() => {
-        seconds++;
-        updateTimerDisplay();
-    }, 1000);
-}
-
-function stopTimer(event) {
-    event.stopPropagation();
-    clearInterval(timerInterval);
-    
-    const earnedExp = seconds * 5;
-    totalExp += earnedExp;
-
-    document.getElementById('startBtn').style.display = 'inline-block';
-    document.getElementById('stopBtn').style.display = 'none';
-
-    checkLevelUp(earnedExp);
-
-    if (seconds > 0) {
-        unlockAchievement('集中マスター', 'badge2');
-    }
-
-    seconds = 0;
-    updateTimerDisplay();
-}
-
-function updateTimerDisplay() {
-    const min = Math.floor(seconds / 60);
-    const sec = seconds % 60;
-    document.getElementById('timerDisplay').innerText = 
-        String(min).padStart(2, '0') + ":" + String(sec).padStart(2, '0');
-}
-
-function checkLevelUp(exp) {
-    const nextThreshold = currentLevel * 100;
-    let levelUp = false;
-
-    if (totalExp >= nextThreshold) {
-        currentLevel++;
-        levelUp = true;
-    }
-
-    updateUI(levelUp, exp, nextThreshold);
-}
-
-function updateUI(isLevelUp, exp, nextThreshold) {
-    document.getElementById('levelDisplay').innerText = "Lv. " + currentLevel;
-    document.getElementById('expText').innerText = `${totalExp} / ${nextThreshold} XP`;
-
-    const progress = (totalExp % nextThreshold) / nextThreshold * 100;
-    document.getElementById('expFill').style.width = (isLevelUp ? 0 : progress) + "%";
-
-    if (isLevelUp) {
-        unlockAchievement('伝説の勇者', 'badge3');
-    }
-}
-
-// 📝 苦手問題ログ
-function addWeakness(event) {
-    event.stopPropagation();
-    const input = document.getElementById('weaknessInput');
-    const value = input.value.trim();
-
-    if (value === "") return;
-
-    insertWeaknessToList(value);
-    input.value = ""; 
-    unlockAchievement('最初の一歩', 'badge1');
-}
-
-function insertWeaknessToList(value) {
-    const list = document.getElementById('weaknessList');
-    const emptyMsg = list.querySelector('.empty-message');
-    if (emptyMsg) {
-        list.innerHTML = "";
-    }
-
-    const item = document.createElement('div');
-    item.className = 'log-item';
-    item.innerHTML = `<span>👾 ${value}</span>`;
-    
-    list.insertBefore(item, list.firstChild);
-}
-
-// 🔄 復習機能
-window.addEventListener('load', () => {
-    loadQuizQuestion();
-});
-
-function loadQuizQuestion() {
-    if (activeQuizList.length === 0) {
-        document.getElementById('quizQuestionText').innerText = "クイズがありませんピヨ！";
-        document.getElementById('quizAnswerText').innerText = "";
-        document.getElementById('showAnswerBtn').style.display = 'none';
-        return;
-    }
-
-    const currentQuiz = activeQuizList[currentQuizIndex];
-    document.getElementById('quizQuestionText').innerText = currentQuiz.q;
-    document.getElementById('quizAnswerText').innerText = "?????";
-    
-    document.getElementById('showAnswerBtn').style.display = 'block';
-    document.getElementById('verifyButtons').style.display = 'none';
-}
-
-function revealQuizAnswer(event) {
-    event.stopPropagation();
-    const currentQuiz = activeQuizList[currentQuizIndex];
-    const answerDisplay = document.getElementById('quizAnswerText');
-    
-    answerDisplay.innerText = "＝ " + currentQuiz.a;
-
-    document.getElementById('showAnswerBtn').style.display = 'none';
-    document.getElementById('verifyButtons').style.display = 'flex';
-}
-
-function evaluateQuiz(isCorrect, event) {
-    event.stopPropagation();
-    const currentQuiz = activeQuizList[currentQuizIndex];
-
-    if (isCorrect) {
-        totalExp += 20;
-        checkLevelUp(0); 
-    } else {
-        insertWeaknessToList(currentQuiz.q + " (答: " + currentQuiz.a + ")");
-    }
-
-    currentQuizIndex = (currentQuizIndex + 1) % activeQuizList.length;
-    loadQuizQuestion();
-}
-
-function toggleQuizForm(event) {
-    event.stopPropagation();
-    const form = document.getElementById('quizFormContainer');
-    form.style.display = (form.style.display === 'block') ? 'none' : 'block';
-}
-
-function addCustomQuiz(event) {
-    event.stopPropagation();
-    const qInput = document.getElementById('customQuestion');
-    const aInput = document.getElementById('customAnswer');
-    const qValue = qInput.value.trim();
-    const aValue = aInput.value.trim();
-
-    if (qValue === "" || aValue === "") return;
-
-    activeQuizList.unshift({ q: qValue, a: aValue });
-    currentQuizIndex = 0; 
-    
-    qInput.value = "";
-    aInput.value = "";
-    toggleQuizForm(event); 
-    
-    loadQuizQuestion(); 
-}
-
-// 🏆 Steam風アチーブメント＆音
+// 解除済みアチーブメント
 let unlockedAchievements = {};
 
-function unlockAchievement(name, badgeId) {
-    if (unlockedAchievements[name]) return;
+
+// ==========================================
+// ❓ デフォルトクイズ
+// ==========================================
+
+const defaultQuizList = [
+    {
+        q: "英単語『study』の意味は？",
+        a: "勉強する"
+    },
+    {
+        q: "かけ算： 7 × 8 ＝ ？",
+        a: "56"
+    },
+    {
+        q: "理科：水の化学式は？",
+        a: "H2O"
+    },
+    {
+        q: "英単語『obvious』の意味は？",
+        a: "明らかな"
+    },
+    {
+        q: "歴史：日本で最初の幕府は？",
+        a: "鎌倉幕府"
+    }
+];
+
+
+// 現在使用するクイズリスト
+let activeQuizList = [...defaultQuizList];
+
+
+// 現在の問題番号
+let currentQuizIndex = 0;
+
+
+
+// ==========================================
+// 🖥️ 画面切り替え
+// ==========================================
+
+function showView(viewName) {
+
+    currentView = viewName;
+
+    const cards = {
+
+        timer:
+            document.getElementById('card-timer'),
+
+        weakness:
+            document.getElementById('card-weakness'),
+
+        review:
+            document.getElementById('card-review'),
+
+        achievement:
+            document.getElementById('card-achievement')
+
+    };
+
+
+    // ホーム画面の場合
+    if (viewName === 'home') {
+
+        document.body.className = "view-home";
+
+
+        for (let key in cards) {
+
+            if (cards[key]) {
+
+                cards[key].classList.remove('hidden');
+
+            }
+
+        }
+
+
+        clearSidebarActive();
+
+    }
+
+
+    // 個別画面の場合
+    else {
+
+        document.body.className = "view-single";
+
+
+        for (let key in cards) {
+
+            if (!cards[key]) continue;
+
+
+            if (key === viewName) {
+
+                cards[key].classList.remove('hidden');
+
+            }
+
+            else {
+
+                cards[key].classList.add('hidden');
+
+            }
+
+        }
+
+
+        updateSidebarActive(viewName);
+
+
+        // タイマー画面を開いたら
+        if (viewName === 'timer') {
+
+            unlockAchievement(
+                '最初の一歩',
+                'badge1'
+            );
+
+        }
+
+    }
+
+}
+
+
+
+// ==========================================
+// 🖱️ カードクリック
+// ==========================================
+
+function handleCardClick(cardName) {
+
+    if (currentView === 'home') {
+
+        showView(cardName);
+
+    }
+
+}
+
+
+
+// ==========================================
+// 🏠 ホームに戻る
+// ==========================================
+
+function goBackToHome(event) {
+
+    event.stopPropagation();
+
+    showView('home');
+
+}
+
+
+
+// ==========================================
+// 📌 サイドバー
+// ==========================================
+
+function clearSidebarActive() {
+
+    const items =
+        document.querySelectorAll('.sidebar-item');
+
+
+    items.forEach(item => {
+
+        item.classList.remove('active');
+
+    });
+
+}
+
+
+function updateSidebarActive(viewName) {
+
+    clearSidebarActive();
+
+
+    const activeItem =
+        document.getElementById(
+            `menu-${viewName}`
+        );
+
+
+    if (activeItem) {
+
+        activeItem.classList.add('active');
+
+    }
+
+}
+
+
+
+// ==========================================
+// ⏱️ タイマー開始
+// ==========================================
+
+function startTimer(event) {
+
+    event.stopPropagation();
+
+
+    // すでにタイマーが動いている場合は停止
+    if (timerInterval) {
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        'startBtn'
+    ).style.display = 'none';
+
+
+    document.getElementById(
+        'stopBtn'
+    ).style.display = 'inline-block';
+
+
+    timerInterval = setInterval(() => {
+
+        seconds++;
+
+        updateTimerDisplay();
+
+    }, 1000);
+
+}
+
+
+
+// ==========================================
+// ⏹️ タイマー停止
+// ==========================================
+
+function stopTimer(event) {
+
+    event.stopPropagation();
+
+
+    clearInterval(timerInterval);
+
+    timerInterval = null;
+
+
+    // 1秒 = 5EXP
+    const earnedExp = seconds * 5;
+
+
+    // EXPを追加
+    totalExp += earnedExp;
+
+
+    document.getElementById(
+        'startBtn'
+    ).style.display = 'inline-block';
+
+
+    document.getElementById(
+        'stopBtn'
+    ).style.display = 'none';
+
+
+    // レベルアップ確認
+    checkLevelUp();
+
+
+    // 1秒以上勉強したら実績
+    if (seconds > 0) {
+
+        unlockAchievement(
+            '集中マスター',
+            'badge2'
+        );
+
+    }
+
+
+    // データ保存
+    saveData();
+
+
+    // タイマーをリセット
+    seconds = 0;
+
+    updateTimerDisplay();
+
+}
+
+
+
+// ==========================================
+// ⏰ タイマー表示更新
+// ==========================================
+
+function updateTimerDisplay() {
+
+    const min =
+        Math.floor(seconds / 60);
+
+
+    const sec =
+        seconds % 60;
+
+
+    document.getElementById(
+        'timerDisplay'
+    ).innerText =
+
+        String(min).padStart(2, '0')
+
+        + ":"
+
+        + String(sec).padStart(2, '0');
+
+}
+
+
+
+// ==========================================
+// ⭐ レベルアップ判定
+// ==========================================
+
+function checkLevelUp() {
+
+    let levelUp = false;
+
+
+    // 必要EXPを超えている間、
+    // レベルを上げ続ける
+    while (
+        totalExp >= currentLevel * 100
+    ) {
+
+        currentLevel++;
+
+        levelUp = true;
+
+    }
+
+
+    // レベルアップした場合
+    if (levelUp) {
+
+        unlockAchievement(
+            '伝説の勇者',
+            'badge3'
+        );
+
+    }
+
+
+    // 画面更新
+    updateGameDisplay();
+
+
+    // データ保存
+    saveData();
+
+}
+
+
+
+// ==========================================
+// 📊 レベル・EXP表示更新
+// ==========================================
+
+function updateGameDisplay() {
+
+    const levelDisplay =
+        document.getElementById(
+            'levelDisplay'
+        );
+
+
+    const expText =
+        document.getElementById(
+            'expText'
+        );
+
+
+    const expFill =
+        document.getElementById(
+            'expFill'
+        );
+
+
+    // 次のレベルに必要なEXP
+    const nextThreshold =
+        currentLevel * 100;
+
+
+    // レベル表示
+    if (levelDisplay) {
+
+        levelDisplay.innerText =
+            "Lv. " + currentLevel;
+
+    }
+
+
+    // EXP表示
+    if (expText) {
+
+        expText.innerText =
+            `${totalExp} / ${nextThreshold} XP`;
+
+    }
+
+
+    // EXPバー
+    if (expFill) {
+
+        const previousThreshold =
+            (currentLevel - 1) * 100;
+
+
+        const neededExp =
+            nextThreshold - previousThreshold;
+
+
+        const currentExpInLevel =
+            totalExp - previousThreshold;
+
+
+        let progress =
+            (currentExpInLevel / neededExp)
+            * 100;
+
+
+        // 0〜100%の範囲に制限
+        progress =
+            Math.max(
+                0,
+                Math.min(100, progress)
+            );
+
+
+        expFill.style.width =
+            progress + "%";
+
+    }
+
+}
+
+
+
+// ==========================================
+// 📝 苦手問題を追加
+// ==========================================
+
+function addWeakness(event) {
+
+    event.stopPropagation();
+
+
+    const input =
+        document.getElementById(
+            'weaknessInput'
+        );
+
+
+    const value =
+        input.value.trim();
+
+
+    // 空の場合は何もしない
+    if (value === "") {
+
+        return;
+
+    }
+
+
+    // 苦手問題を保存
+    nigateLogs.unshift(value);
+
+
+    // 画面を更新
+    renderWeaknessList();
+
+
+    // 入力欄を空にする
+    input.value = "";
+
+
+    // アチーブメント
+    unlockAchievement(
+        '最初の一歩',
+        'badge1'
+    );
+
+
+    // データ保存
+    saveData();
+
+}
+
+
+
+// ==========================================
+// 👾 苦手問題をデータに追加
+// ==========================================
+
+function insertWeaknessToList(value) {
+
+    // 同じ問題が何度も追加されないようにする
+    if (!nigateLogs.includes(value)) {
+
+        nigateLogs.unshift(value);
+
+    }
+
+
+    // 画面更新
+    renderWeaknessList();
+
+
+    // 保存
+    saveData();
+
+}
+
+
+
+// ==========================================
+// 📋 苦手問題一覧を表示
+// ==========================================
+
+function renderWeaknessList() {
+
+    const list =
+        document.getElementById(
+            'weaknessList'
+        );
+
+
+    if (!list) {
+
+        return;
+
+    }
+
+
+    // 一度画面を空にする
+    list.innerHTML = "";
+
+
+    // 苦手問題がない場合
+    if (nigateLogs.length === 0) {
+
+        list.innerHTML = `
+
+            <div class="empty-message">
+                まだ苦手問題はありません！
+            </div>
+
+        `;
+
+
+        return;
+
+    }
+
+
+    // 保存されている問題を表示
+    nigateLogs.forEach(value => {
+
+        const item =
+            document.createElement('div');
+
+
+        item.className =
+            'log-item';
+
+
+        item.innerHTML =
+            `<span>👾 ${value}</span>`;
+
+
+        list.appendChild(item);
+
+    });
+
+}
+
+
+
+// ==========================================
+// 🔄 復習機能
+// ==========================================
+
+window.addEventListener(
+    'load',
+    () => {
+
+        loadQuizQuestion();
+
+    }
+);
+
+
+
+// ==========================================
+// ❓ クイズ読み込み
+// ==========================================
+
+function loadQuizQuestion() {
+
+    if (
+        activeQuizList.length === 0
+    ) {
+
+        document.getElementById(
+            'quizQuestionText'
+        ).innerText =
+            "クイズがありませんピヨ！";
+
+
+        document.getElementById(
+            'quizAnswerText'
+        ).innerText = "";
+
+
+        document.getElementById(
+            'showAnswerBtn'
+        ).style.display =
+            'none';
+
+
+        return;
+
+    }
+
+
+    const currentQuiz =
+        activeQuizList[currentQuizIndex];
+
+
+    document.getElementById(
+        'quizQuestionText'
+    ).innerText =
+        currentQuiz.q;
+
+
+    document.getElementById(
+        'quizAnswerText'
+    ).innerText =
+        "?????";
+
+
+    document.getElementById(
+        'showAnswerBtn'
+    ).style.display =
+        'block';
+
+
+    document.getElementById(
+        'verifyButtons'
+    ).style.display =
+        'none';
+
+}
+
+
+
+// ==========================================
+// 👀 答えを表示
+// ==========================================
+
+function revealQuizAnswer(event) {
+
+    event.stopPropagation();
+
+
+    const currentQuiz =
+        activeQuizList[currentQuizIndex];
+
+
+    const answerDisplay =
+        document.getElementById(
+            'quizAnswerText'
+        );
+
+
+    answerDisplay.innerText =
+        "＝ " + currentQuiz.a;
+
+
+    document.getElementById(
+        'showAnswerBtn'
+    ).style.display =
+        'none';
+
+
+    document.getElementById(
+        'verifyButtons'
+    ).style.display =
+        'flex';
+
+}
+
+
+
+// ==========================================
+// ⭕❌ クイズ判定
+// ==========================================
+
+function evaluateQuiz(
+    isCorrect,
+    event
+) {
+
+    event.stopPropagation();
+
+
+    const currentQuiz =
+        activeQuizList[currentQuizIndex];
+
+
+    // 正解の場合
+    if (isCorrect) {
+
+        totalExp += 20;
+
+
+        checkLevelUp();
+
+    }
+
+
+    // 不正解の場合
+    else {
+
+        insertWeaknessToList(
+
+            currentQuiz.q
+
+            + " (答: "
+
+            + currentQuiz.a
+
+            + ")"
+
+        );
+
+    }
+
+
+    // 保存
+    saveData();
+
+
+    // 次の問題へ
+    currentQuizIndex =
+
+        (
+            currentQuizIndex + 1
+        )
+
+        % activeQuizList.length;
+
+
+    loadQuizQuestion();
+
+}
+
+
+
+// ==========================================
+// ➕ 問題追加フォーム
+// ==========================================
+
+function toggleQuizForm(event) {
+
+    event.stopPropagation();
+
+
+    const form =
+        document.getElementById(
+            'quizFormContainer'
+        );
+
+
+    form.style.display =
+
+        (
+            form.style.display === 'block'
+        )
+
+        ? 'none'
+
+        : 'block';
+
+}
+
+
+
+// ==========================================
+// ➕ オリジナル問題追加
+// ==========================================
+
+function addCustomQuiz(event) {
+
+    event.stopPropagation();
+
+
+    const qInput =
+        document.getElementById(
+            'customQuestion'
+        );
+
+
+    const aInput =
+        document.getElementById(
+            'customAnswer'
+        );
+
+
+    const qValue =
+        qInput.value.trim();
+
+
+    const aValue =
+        aInput.value.trim();
+
+
+    // 空欄チェック
+    if (
+        qValue === ""
+        ||
+        aValue === ""
+    ) {
+
+        return;
+
+    }
+
+
+    // 問題リストに追加
+    activeQuizList.unshift({
+
+        q: qValue,
+
+        a: aValue
+
+    });
+
+
+    currentQuizIndex = 0;
+
+
+    // 入力欄を空にする
+    qInput.value = "";
+
+    aInput.value = "";
+
+
+    toggleQuizForm(event);
+
+
+    loadQuizQuestion();
+
+}
+
+
+
+// ==========================================
+// 🏆 アチーブメント解除
+// ==========================================
+
+function unlockAchievement(
+    name,
+    badgeId
+) {
+
+    // すでに解除済みなら終了
+    if (
+        unlockedAchievements[name]
+    ) {
+
+        return;
+
+    }
+
+
+    // 解除状態にする
     unlockedAchievements[name] = true;
 
-    const badge = document.getElementById(badgeId);
+
+    const badge =
+        document.getElementById(
+            badgeId
+        );
+
+
     if (badge) {
-        badge.classList.add('unlocked');
+
+        badge.classList.add(
+            'unlocked'
+        );
+
     }
 
+
+    // データ保存
+    saveData();
+
+
+    // サウンド再生
     playAchievementSound();
 
-    const toast = document.getElementById('steamToast');
-    const nameDisplay = document.getElementById('steamBadgeName');
-    
-    nameDisplay.innerText = name;
-    toast.classList.add('show');
 
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 4000);
+    // トースト取得
+    const toast =
+        document.getElementById(
+            'steamToast'
+        );
+
+
+    const nameDisplay =
+        document.getElementById(
+            'steamBadgeName'
+        );
+
+
+    // 要素が存在する場合だけ表示
+    if (
+        toast
+        &&
+        nameDisplay
+    ) {
+
+        nameDisplay.innerText =
+            name;
+
+
+        toast.classList.add(
+            'show'
+        );
+
+
+        setTimeout(() => {
+
+            toast.classList.remove(
+                'show'
+            );
+
+        }, 4000);
+
+    }
+
 }
+
+
+
+// ==========================================
+// 🔊 アチーブメント音
+// ==========================================
 
 function playAchievementSound() {
+
     try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        const osc1 = audioCtx.createOscillator();
-        const gain1 = audioCtx.createGain();
+
+        const audioCtx =
+
+            new (
+
+                window.AudioContext
+                ||
+                window.webkitAudioContext
+
+            )();
+
+
+        const osc1 =
+            audioCtx.createOscillator();
+
+
+        const gain1 =
+            audioCtx.createGain();
+
+
         osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+
+
+        osc1.frequency.setValueAtTime(
+
+            523.25,
+
+            audioCtx.currentTime
+
+        );
+
+
         osc1.connect(gain1);
-        gain1.connect(audioCtx.destination);
-        gain1.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-        
-        const osc2 = audioCtx.createOscillator();
-        const gain2 = audioCtx.createGain();
+
+        gain1.connect(
+            audioCtx.destination
+        );
+
+
+        gain1.gain.setValueAtTime(
+
+            0.1,
+
+            audioCtx.currentTime
+
+        );
+
+
+        gain1.gain.exponentialRampToValueAtTime(
+
+            0.01,
+
+            audioCtx.currentTime + 0.3
+
+        );
+
+
+        const osc2 =
+            audioCtx.createOscillator();
+
+
+        const gain2 =
+            audioCtx.createGain();
+
+
         osc2.type = 'triangle';
-        osc2.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.1);
+
+
+        osc2.frequency.setValueAtTime(
+
+            880,
+
+            audioCtx.currentTime + 0.1
+
+        );
+
+
         osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
-        gain2.gain.setValueAtTime(0, audioCtx.currentTime);
-        gain2.gain.setValueAtTime(0.12, audioCtx.currentTime + 0.1);
-        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+
+        gain2.connect(
+            audioCtx.destination
+        );
+
+
+        gain2.gain.setValueAtTime(
+
+            0,
+
+            audioCtx.currentTime
+
+        );
+
+
+        gain2.gain.setValueAtTime(
+
+            0.12,
+
+            audioCtx.currentTime + 0.1
+
+        );
+
+
+        gain2.gain.exponentialRampToValueAtTime(
+
+            0.01,
+
+            audioCtx.currentTime + 0.5
+
+        );
+
 
         osc1.start();
-        osc1.stop(audioCtx.currentTime + 0.3);
-        
-        osc2.start(audioCtx.currentTime + 0.1);
-        osc2.stop(audioCtx.currentTime + 0.5);
-    } catch(e) {
-        console.log("Audio exception: " + e);
+
+        osc1.stop(
+            audioCtx.currentTime + 0.3
+        );
+
+
+        osc2.start(
+            audioCtx.currentTime + 0.1
+        );
+
+
+        osc2.stop(
+            audioCtx.currentTime + 0.5
+        );
+
     }
+
+    catch (e) {
+
+        console.log(
+            "Audio exception: " + e
+        );
+
+    }
+
 }
+
+
+
+// ==========================================
+// 🧪 アチーブメントテスト
+// ==========================================
 
 function triggerSteamTest(type) {
+
     if (type === 'first') {
-        unlockedAchievements['最初の一歩'] = false;
-        unlockAchievement('最初の一歩', 'badge1');
-    } else if (type === 'timer') {
-        unlockedAchievements['集中マスター'] = false;
-        unlockAchievement('集中マスター', 'badge2');
-    } else if (type === 'hero') {
-        unlockedAchievements['伝説の勇者'] = false;
-        unlockAchievement('伝説の勇者', 'badge3');
+
+        unlockedAchievements[
+            '最初の一歩'
+        ] = false;
+
+
+        unlockAchievement(
+            '最初の一歩',
+            'badge1'
+        );
+
     }
+
+
+    else if (type === 'timer') {
+
+        unlockedAchievements[
+            '集中マスター'
+        ] = false;
+
+
+        unlockAchievement(
+            '集中マスター',
+            'badge2'
+        );
+
+    }
+
+
+    else if (type === 'hero') {
+
+        unlockedAchievements[
+            '伝説の勇者'
+        ] = false;
+
+
+        unlockAchievement(
+            '伝説の勇者',
+            'badge3'
+        );
+
+    }
+
 }
 
-// データをブラウザ（localStorage）に保存する関数
+
+
+// ==========================================
+// 💾 データ保存
+// ==========================================
+
 function saveData() {
+
     const gameState = {
-        level: currentLevel, // お使いのレベル変数名に変更してください
-        logs: nigateLogs     // お使いのログ変数名に変更してください
+
+        // レベル
+        level:
+            currentLevel,
+
+
+        // EXP
+        exp:
+            totalExp,
+
+
+        // 苦手問題
+        logs:
+            nigateLogs,
+
+
+        // アチーブメント
+        achievements:
+            unlockedAchievements
+
     };
-    localStorage.setItem('studyQuestData', JSON.stringify(gameState));
+
+
+    // JavaScriptのデータを
+    // JSON文字列に変換して保存
+    localStorage.setItem(
+
+        'studyQuestData',
+
+        JSON.stringify(gameState)
+
+    );
+
+
+    console.log(
+        "データを保存しました！",
+        gameState
+    );
+
 }
 
-// 保存されたデータを読み込んで復元する関数
+
+
+// ==========================================
+// 📂 データ読み込み
+// ==========================================
+
 function loadData() {
-    const savedData = localStorage.getItem('studyQuestData');
-    if (savedData) {
-        const gameState = JSON.parse(savedData);
-        currentLevel = gameState.level;
-        nigateLogs = gameState.logs;
-        // 画面上のレベル表示やログ一覧を更新する関数をここで実行
-        updateUI(); 
+
+    const savedData =
+        localStorage.getItem(
+            'studyQuestData'
+        );
+
+
+    // 保存データがない場合
+    if (!savedData) {
+
+        console.log(
+            "保存データはありません"
+        );
+
+
+        // 初期画面を表示
+        updateGameDisplay();
+
+        renderWeaknessList();
+
+        return;
+
     }
+
+
+    try {
+
+        // JSON文字列を
+        // JavaScriptのデータに戻す
+        const gameState =
+            JSON.parse(savedData);
+
+
+        // --------------------------
+        // レベルを復元
+        // --------------------------
+
+        if (
+            gameState.level !== undefined
+        ) {
+
+            currentLevel =
+                gameState.level;
+
+        }
+
+
+        // --------------------------
+        // EXPを復元
+        // --------------------------
+
+        if (
+            gameState.exp !== undefined
+        ) {
+
+            totalExp =
+                gameState.exp;
+
+        }
+
+
+        // --------------------------
+        // 苦手問題を復元
+        // --------------------------
+
+        if (
+            Array.isArray(
+                gameState.logs
+            )
+        ) {
+
+            nigateLogs =
+                gameState.logs;
+
+        }
+
+
+        // --------------------------
+        // アチーブメントを復元
+        // --------------------------
+
+        if (
+            gameState.achievements
+        ) {
+
+            unlockedAchievements =
+                gameState.achievements;
+
+        }
+
+
+        // 画面を更新
+        updateGameDisplay();
+
+        renderWeaknessList();
+
+        restoreAchievements();
+
+
+        console.log(
+            "データを読み込みました！",
+            gameState
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "データの読み込みに失敗しました",
+            error
+        );
+
+    }
+
 }
 
-// ページを開いたときに読み込みを実行
-window.addEventListener('DOMContentLoaded', () => {
-    loadData();
-});
+
+
+// ==========================================
+// 🏆 アチーブメント表示を復元
+// ==========================================
+
+function restoreAchievements() {
+
+    const achievementMap = {
+
+        '最初の一歩':
+            'badge1',
+
+        '集中マスター':
+            'badge2',
+
+        '伝説の勇者':
+            'badge3'
+
+    };
+
+
+    for (
+        const achievementName
+        in unlockedAchievements
+    ) {
+
+        // 解除済みでなければスキップ
+        if (
+            !unlockedAchievements[
+                achievementName
+            ]
+        ) {
+
+            continue;
+
+        }
+
+
+        const badgeId =
+            achievementMap[
+                achievementName
+            ];
+
+
+        if (!badgeId) {
+
+            continue;
+
+        }
+
+
+        const badge =
+            document.getElementById(
+                badgeId
+            );
+
+
+        if (badge) {
+
+            badge.classList.add(
+                'unlocked'
+            );
+
+        }
+
+    }
+
+}
+
+
+
+// ==========================================
+// 🚀 ページ読み込み時
+// ==========================================
+
+window.addEventListener(
+    'DOMContentLoaded',
+    () => {
+
+        // 保存データを読み込む
+        loadData();
+
+        // クイズを表示
+        loadQuizQuestion();
+
+    }
+);
