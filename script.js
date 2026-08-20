@@ -185,155 +185,6 @@ function showView(viewName) {
 }
 
 
-    // ======================================
-    // 🏠 ホーム画面の場合
-    // ======================================
-
-    if (viewName === 'home') {
-
-        document.body.className =
-            "view-home";
-
-
-        // 設定以外のカードを表示
-        for (let key in cards) {
-
-            if (key === 'settings') {
-
-                cards[key].classList.add('hidden');
-
-            } else {
-
-                cards[key].classList.remove('hidden');
-
-            }
-
-        }
-
-
-        clearSidebarActive();
-
-    }
-
-
-    // ======================================
-    // 📱 各機能を開く場合
-    // ======================================
-
-    else {
-
-        document.body.className =
-            "view-single";
-
-
-        // 選択したカードだけ表示
-        for (let key in cards) {
-
-            if (key === viewName) {
-
-                cards[key].classList.remove('hidden');
-
-            } else {
-
-                cards[key].classList.add('hidden');
-
-            }
-
-        }
-
-
-        // サイドバーの選択状態を更新
-        updateSidebarActive(viewName);
-
-
-        // タイマーを初めて開いた場合
-        if (viewName === 'timer') {
-
-            unlockAchievement(
-                '最初の一歩',
-                'badge1'
-            );
-
-        }
-
-
-        // ⚙️ 設定を開いた場合
-        if (viewName === 'settings') {
-
-            updateSettingsDisplay();
-
-        }
-
-    };
-
-
-    // ホーム画面の場合
-    if (viewName === 'home') {
-
-        document.body.className = "view-home";
-
-
-        for (let key in cards) {
-
-            if (cards[key]) {
-
-                cards[key].classList.remove('hidden');
-
-            }
-
-        }
-
-
-        clearSidebarActive();
-
-    }
-
-
-    // 個別画面の場合
-    else {
-
-        document.body.className = "view-single";
-
-
-        for (let key in cards) {
-
-            if (!cards[key]) continue;
-
-
-            if (key === viewName) {
-
-                cards[key].classList.remove('hidden');
-
-            }
-
-            else {
-
-                cards[key].classList.add('hidden');
-
-            }
-
-        }
-
-
-        updateSidebarActive(viewName);
-
-
-        // タイマー画面を開いたら
-        if (viewName === 'timer') {
-
-            unlockAchievement(
-                '最初の一歩',
-                'badge1'
-            );
-
-        }
-
-    }
-
-
-
-
-
 // ==========================================
 // 🖱️ カードクリック
 // ==========================================
@@ -1531,6 +1382,23 @@ function loadData() {
             unlockedAchievements =
                 gameState.achievements;
 
+        }
+
+
+        // ==========================================
+        // ⚙️ 設定（名前・ランキング・効果音）
+        // ==========================================
+
+        if (gameState.playerName !== undefined) {
+            playerName = gameState.playerName;
+        }
+
+        if (gameState.rankingEnabled !== undefined) {
+            rankingEnabled = gameState.rankingEnabled;
+        }
+
+        if (gameState.soundEnabled !== undefined) {
+            soundEnabled = gameState.soundEnabled;
         }
 
 
