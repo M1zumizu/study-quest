@@ -249,24 +249,24 @@
         </div>
     </div>
 
-    <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } 
-    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // Firebaseの管理画面からコピペする設定値
+  // Your web app's Firebase configuration
   const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    projectId: "YOUR_PROJECT_ID",
-    // ...その他の設定項目
+    apiKey: "AIzaSyB5MpRQ6YgcEG5x3jx5cHjomXolSxG_YQo",
+    authDomain: "study-quest-3b38a.firebaseapp.com",
+    projectId: "study-quest-3b38a",
+    storageBucket: "study-quest-3b38a.firebasestorage.app",
+    messagingSenderId: "18058267368",
+    appId: "1:18058267368:web:0c3ae3a524279b6781975d"
   };
 
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // script.js から呼び出せるようにグローバルへ割り当て
-  window.db = db;
-  window.firestoreUtils = { collection, addDoc, query, orderBy, limit, getDocs };
 </script>
     <script src="script.js"></script>
 </body>
