@@ -1443,10 +1443,9 @@ function saveData() {
 
 function loadData() {
 
-    const savedData =
-        localStorage.getItem(
-            'studyQuestData'
-        );
+    const savedData = localStorage.getItem(
+        'studyQuestData'
+    );
 
 
     // ==========================================
@@ -1456,22 +1455,19 @@ function loadData() {
     if (!savedData) {
 
         console.log(
-            'Study Quest：保存データなし'
+            'Study Quest：保存データはありません'
         );
 
         updateGameDisplay();
-
         renderWeaknessList();
-
         updateSettingsDisplay();
 
         return;
-
     }
 
 
     // ==========================================
-    // 保存データを復元
+    // 保存データを読み込む
     // ==========================================
 
     try {
@@ -1513,9 +1509,7 @@ function loadData() {
         // ==========================================
 
         if (
-            Array.isArray(
-                gameState.logs
-            )
+            Array.isArray(gameState.logs)
         ) {
 
             nigateLogs =
@@ -1541,49 +1535,7 @@ function loadData() {
 
 
         // ==========================================
-        // 👤 ニックネーム
-        // ==========================================
-
-        if (
-            gameState.playerName !== undefined
-        ) {
-
-            playerName =
-                gameState.playerName;
-
-        }
-
-
-        // ==========================================
-        // 🏆 ランキング参加状態
-        // ==========================================
-
-        if (
-            gameState.rankingEnabled !== undefined
-        ) {
-
-            rankingEnabled =
-                gameState.rankingEnabled;
-
-        }
-
-
-        // ==========================================
-        // 🔊 効果音
-        // ==========================================
-
-        if (
-            gameState.soundEnabled !== undefined
-        ) {
-
-            soundEnabled =
-                gameState.soundEnabled;
-
-        }
-
-
-        // ==========================================
-        // 画面更新
+        // 画面を更新
         // ==========================================
 
         updateGameDisplay();
@@ -1605,54 +1557,11 @@ function loadData() {
     catch (error) {
 
         console.error(
-            'Study Quest：データ読み込み失敗',
+            'Study Quest：データ読み込みエラー',
             error
         );
 
     }
-
-}
-
-// --------------------------
-// ⚙️ ニックネームを復元
-// --------------------------
-
-if (
-    gameState.playerName !== undefined
-) {
-
-    playerName =
-        gameState.playerName;
-
-}
-
-
-
-// --------------------------
-// 🏆 ランキング設定を復元
-// --------------------------
-
-if (
-    gameState.rankingEnabled !== undefined
-) {
-
-    rankingEnabled =
-        gameState.rankingEnabled;
-
-}
-
-
-
-// --------------------------
-// 🔊 効果音設定を復元
-// --------------------------
-
-if (
-    gameState.soundEnabled !== undefined
-) {
-
-    soundEnabled =
-        gameState.soundEnabled;
 
 }
 
