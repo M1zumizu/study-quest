@@ -413,6 +413,10 @@ function saveData() {
     try {
         localStorage.setItem('studyQuestData', JSON.stringify(gameState));
         console.log('Study Quest：データ保存成功', gameState);
+        
+        // ★ここで安全にランキング送信処理を実行
+        sendScoreToRanking();
+        
         return true;
     } catch (error) {
         console.error('Study Quest：データ保存失敗', error);
@@ -555,23 +559,12 @@ window.addEventListener('DOMContentLoaded', () => {
     showView('home');
 });
 
-// --- 既存のコード群 ---
-
-// データ保存関数（既存コードの中身）
-function saveData() {
-    // ...既存のローカル保存処理...
-
-    // ★最下部にこの1行を追加してランキングへ送信
-    sendScoreToRanking();
-}
-
 // ==========================================
-// ★script.js の一番最後に以下を追加
+// 🏆 ランキング機能 (Firebase連携)
 // ==========================================
 async function sendScoreToRanking() {
-    // Firebaseがまだ設定されていない場合は安全に処理をスキップ
-    if (!window.firestoreUtils || !window.db) {
-        console.log("Firebaseが未初期化のため、ランキング送信をスキップします");
+    // ランキング機能が無効な場合、またはFirebase未準備の場合はスキップ
+    if (!rankingEnabled || !window.firestoreUtils || !window.db) {
         return;
     }
 
@@ -585,5 +578,32 @@ async function sendScoreToRanking() {
         });
     } catch (e) {
         console.error("スコア送信エラー:", e);
+    }
+}
+
+async function loadRanking() {
+    if (!window.firestoreUtils || !window.db) {
+        alert("ランキング機能の準備が完了していません。");
+        return;
+    }
+
+    const { collection, query, orderBy, limit, getDocs } = window.firestoreUtils;
+    try {
+        const q = query(collection(window.db, "rankings"), orderBy("totalExp", "desc"), limit(10));
+        const querySnapshot = await getDocs(q);
+
+        let html = '<ol class="ranking-list">';
+        let rank = 1;
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            html += `<li><strong>${rank}位</strong>: ${data.playerName} - Lv.${data.level} (${data.totalExp} XP)</li>`;
+            rank++;
+        });
+        html += '</ol>';
+
+        const displayElem = document.getElementById('rankingDisplay');
+        if (displayElem) displayElem.innerHTML = html;
+    } catch (e) {
+        console.error("ランキング取得エラー:", e);
     }
 }
