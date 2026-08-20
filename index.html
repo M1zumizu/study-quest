@@ -249,6 +249,25 @@
         </div>
     </div>
 
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } 
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // Firebaseの管理画面からコピペする設定値
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    projectId: "YOUR_PROJECT_ID",
+    // ...その他の設定項目
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // script.js から呼び出せるようにグローバルへ割り当て
+  window.db = db;
+  window.firestoreUtils = { collection, addDoc, query, orderBy, limit, getDocs };
+</script>
     <script src="script.js"></script>
 </body>
 </html>

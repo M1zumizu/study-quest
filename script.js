@@ -554,3 +554,51 @@ window.addEventListener('DOMContentLoaded', () => {
     loadQuizQuestion();
     showView('home');
 });
+
+// --- 既存のコード群 ---
+
+// データ保存関数（既存コードの中身）
+function saveData() {
+    // ...既存のローカル保存処理...
+
+    // ★最下部にこの1行を追加してランキングへ送信
+    sendScoreToRanking();
+}
+
+// ==========================================
+// ★script.js の一番最後に以下を追加
+// ==========================================
+async function sendScoreToRanking() {
+    const { collection, addDoc } = window.firestoreUtils;
+    try {
+        await addDoc(collection(window.db, "rankings"), {
+            playerName: playerName,
+            totalExp: totalExp,
+            level: currentLevel,
+            createdAt: new Date()
+        });
+    } catch (e) {
+        console.error("スコア送信エラー:", e);
+    }
+}
+
+async function loadRanking() {
+    const { collection, query, orderBy, limit, getDocs } = window.firestoreUtils;
+    try {
+        const q = query(collection(window.db, "rankings"), orderBy("totalExp", "desc"), limit(10));
+        const querySnapshot = await getDocs(q);
+
+        let html = '<ol class="ranking-list">';
+        let rank = 1;
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            html += `<li><strong>${rank}位</strong>: ${data.playerName} - Lv.${data.level} (${data.totalExp} XP)</li>`;
+            rank++;
+        });
+        html += '</ol>';
+
+        document.getElementById('rankingDisplay').innerHTML = html;
+    } catch (e) {
+        console.error("ランキング取得エラー:", e);
+    }
+}
