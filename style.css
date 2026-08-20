@@ -661,4 +661,19 @@ body {
         width: 100%;
     }
 
+    /* サイドバーが重ならないようにする */
+    .app-container,
+    .container,
+    .main,
+    main,
+    .main-content,
+    .content,
+    #app {
+
+        margin-top: 70px;
+
+        padding-top: 20px;
+
+        box-sizing: border-box;
+    }
 }
