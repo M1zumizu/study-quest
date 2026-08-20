@@ -33,6 +33,18 @@ let nigateLogs = [];
 // 解除済みアチーブメント
 let unlockedAchievements = {};
 
+// ==========================================
+// ⚙️ 設定データ
+// ==========================================
+
+// プレイヤー名
+let playerName = "名無し";
+
+// ランキング参加状態
+let rankingEnabled = false;
+
+// 効果音ON/OFF
+let soundEnabled = true;
 
 // ==========================================
 // ❓ デフォルトクイズ
@@ -81,17 +93,24 @@ function showView(viewName) {
 
     const cards = {
 
-        timer:
-            document.getElementById('card-timer'),
 
-        weakness:
-            document.getElementById('card-weakness'),
+    timer:
+        document.getElementById('card-timer'),
 
-        review:
-            document.getElementById('card-review'),
+    weakness:
+        document.getElementById('card-weakness'),
 
-        achievement:
-            document.getElementById('card-achievement')
+    review:
+        document.getElementById('card-review'),
+
+    achievement:
+        document.getElementById('card-achievement'),
+
+    settings:
+        document.getElementById('card-settings')
+
+}
+
 
     };
 
@@ -159,7 +178,7 @@ function showView(viewName) {
 
     }
 
-}
+
 
 
 
@@ -951,7 +970,11 @@ function unlockAchievement(
 
 
     // サウンド再生
+    if (soundEnabled) {
+
     playAchievementSound();
+
+}
 
 
     // トースト取得
@@ -1207,24 +1230,30 @@ function saveData() {
 
     const gameState = {
 
-        // レベル
-        level:
-            currentLevel,
+    // レベル
+    level: currentLevel,
 
+    // EXP
+    exp: totalExp,
 
-        // EXP
-        exp:
-            totalExp,
+    // 苦手問題
+    logs: nigateLogs,
 
+    // アチーブメント
+    achievements: unlockedAchievements,
 
-        // 苦手問題
-        logs:
-            nigateLogs,
+    // ======================
+    // ⚙️ 設定
+    // ======================
 
+    // ニックネーム
+    playerName: playerName,
 
-        // アチーブメント
-        achievements:
-            unlockedAchievements
+    // ランキング参加
+    rankingEnabled: rankingEnabled,
+
+    // 効果音
+    soundEnabled: soundEnabled
 
     };
 
@@ -1346,12 +1375,14 @@ function loadData() {
 
 
         // 画面を更新
+
         updateGameDisplay();
 
         renderWeaknessList();
 
         restoreAchievements();
 
+        updateSettingsDisplay();
 
         console.log(
             "データを読み込みました！",
@@ -1371,7 +1402,48 @@ function loadData() {
 
 }
 
+// --------------------------
+// ⚙️ ニックネームを復元
+// --------------------------
 
+if (
+    gameState.playerName !== undefined
+) {
+
+    playerName =
+        gameState.playerName;
+
+}
+
+
+
+// --------------------------
+// 🏆 ランキング設定を復元
+// --------------------------
+
+if (
+    gameState.rankingEnabled !== undefined
+) {
+
+    rankingEnabled =
+        gameState.rankingEnabled;
+
+}
+
+
+
+// --------------------------
+// 🔊 効果音設定を復元
+// --------------------------
+
+if (
+    gameState.soundEnabled !== undefined
+) {
+
+    soundEnabled =
+        gameState.soundEnabled;
+
+}
 
 // ==========================================
 // 🏆 アチーブメント表示を復元
@@ -1441,13 +1513,233 @@ function restoreAchievements() {
 
 }
 
+// ==========================================
+// ⚙️ プレイヤー名を保存
+// ==========================================
 
+function savePlayerName(event) {
+
+    event.stopPropagation();
+
+    const input =
+        document.getElementById(
+            'playerNameInput'
+        );
+
+
+    const value =
+        input.value.trim();
+
+
+    // 空欄の場合
+    if (value === "") {
+
+        playerName = "名無し";
+
+    }
+
+    else {
+
+        playerName = value;
+
+    }
+
+
+    // 入力欄にも反映
+    input.value = playerName;
+
+
+    // 保存
+    saveData();
+
+    alert(
+        "ニックネームを保存しました！"
+    );
+
+}
+
+
+
+// ==========================================
+// 🏆 ランキング参加設定
+// ==========================================
+
+function setRankingParticipation(
+    isEnabled,
+    event
+) {
+
+    event.stopPropagation();
+
+
+    rankingEnabled = isEnabled;
+
+
+    updateSettingsDisplay();
+
+
+    saveData();
+
+
+    if (rankingEnabled) {
+
+        alert(
+            "ランキングへの参加をONにしました！"
+        );
+
+    }
+
+    else {
+
+        alert(
+            "ランキングへの参加をOFFにしました。"
+        );
+
+    }
+
+}
+
+
+
+// ==========================================
+// 🔊 効果音設定
+// ==========================================
+
+function setSoundEnabled(
+    isEnabled,
+    event
+) {
+
+    event.stopPropagation();
+
+
+    soundEnabled = isEnabled;
+
+
+    updateSettingsDisplay();
+
+
+    saveData();
+
+}
+
+
+
+// ==========================================
+// ⚙️ 設定画面を更新
+// ==========================================
+
+function updateSettingsDisplay() {
+
+    const playerNameInput =
+        document.getElementById(
+            'playerNameInput'
+        );
+
+
+    const rankingStatus =
+        document.getElementById(
+            'rankingStatus'
+        );
+
+
+    const soundStatus =
+        document.getElementById(
+            'soundStatus'
+        );
+
+
+    // ニックネーム表示
+    if (playerNameInput) {
+
+        playerNameInput.value =
+            playerName;
+
+    }
+
+
+    // ランキング状態
+    if (rankingStatus) {
+
+        if (rankingEnabled) {
+
+            rankingStatus.innerText =
+                "現在：ランキングに参加しています 🏆";
+
+        }
+
+        else {
+
+            rankingStatus.innerText =
+                "現在：ランキングに参加していません";
+
+        }
+
+    }
+
+
+    // 効果音状態
+    if (soundStatus) {
+
+        if (soundEnabled) {
+
+            soundStatus.innerText =
+                "現在：ON 🔊";
+
+        }
+
+        else {
+
+            soundStatus.innerText =
+                "現在：OFF 🔇";
+
+        }
+
+    }
+
+}
+
+
+
+// ==========================================
+// 🗑️ データリセット
+// ==========================================
+
+function resetGameData(event) {
+
+    event.stopPropagation();
+
+
+    const result =
+        confirm(
+            "本当にすべてのデータを削除しますか？\nこの操作は元に戻せません。"
+        );
+
+
+    if (!result) {
+
+        return;
+
+    }
+
+
+    // localStorageから削除
+    localStorage.removeItem(
+        'studyQuestData'
+    );
+
+
+    // ページを再読み込み
+    location.reload();
+
+}
 
 // ==========================================
 // 🚀 ページ読み込み時
 // ==========================================
 
 window.addEventListener(
+
     'DOMContentLoaded',
     () => {
 

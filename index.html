@@ -23,22 +23,34 @@
 
         <div class="menu-title">MENU</div>
         <div class="sidebar-menu">
+
             <a class="sidebar-item" id="menu-timer" onclick="showView('timer')">
                 <svg viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm1-13h-2v6l4.2 4.2 1.4-1.4-3.6-3.6V7z"/></svg>
                 タイマー＆レベル
             </a>
+
             <a class="sidebar-item" id="menu-weakness" onclick="showView('weakness')">
                 <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/></svg>
                 苦手問題ログ
             </a>
+
             <a class="sidebar-item" id="menu-review" onclick="showView('review')">
                 <svg viewBox="0 0 24 24"><path d="M19 12h2c0-4.963-4.037-9-9-9V1c-3.978 0-7.361 2.585-8.583 6H1.011l3.5 4.5 3.5-4.5H5.432C6.541 4.515 9.043 5 12 5c3.859 0 7 3.141 7 7zm-7 7c-3.859 0-7-3.141-7-7H3c0 4.963 4.037 9 9 9v2c3.978 0 7.361-2.585 8.583-6h2.406l-3.5-4.5-3.5 4.5h2.583C17.459 15.485 14.957 19 12 19z"/></svg>
                 復習クエスト
             </a>
+
             <a class="sidebar-item" id="menu-achievement" onclick="showView('achievement')">
                 <svg viewBox="0 0 24 24"><path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8-8 8zm3.5-11.5L12 12.3l-3.5-3.8-1.5 1.5L12 15l5-5z"/></svg>
                 アチーブメント
             </a>
+
+            <a class="sidebar-item" id="menu-settings" onclick="showView('settings')">
+    <svg viewBox="0 0 24 24">
+        <path d="M19.14,12.94a7.49,7.49,0,0,0,.05-.94,7.49,7.49,0,0,0-.05-.94l2.03-1.58a.5.5,0,0,0,.12-.64l-1.92-3.32a.5.5,0,0,0-.61-.22l-2.39,1a7.28,7.28,0,0,0-1.62-.94L14.5,2.81A.5.5,0,0,0,14,2.5H10a.5.5,0,0,0-.5.31L9.14,5.35a7.28,7.28,0,0,0-1.62.94l-2.39-1a.5.5,0,0,0-.61.22L2.6,8.84a.5.5,0,0,0,.12.64l2.03,1.58a7.49,7.49,0,0,0-.05.94,7.49,7.49,0,0,0,.05.94L2.72,14.52a.5.5,0,0,0-.12.64l1.92,3.32a.5.5,0,0,0,.61.22l2.39-1a7.28,7.28,0,0,0,1.62.94l.36,2.54A.5.5,0,0,0,10,21.5h4a.5.5,0,0,0,.5-.31l.36-2.54a7.28,7.28,0,0,0,1.62-.94l2.39,1a.5.5,0,0,0,.61-.22l1.92-3.32a.5.5,0,0,0-.12-.64ZM12,15.5A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/>
+    </svg>
+    設定
+            </a>
+
         </div>
     </div>
 
@@ -50,7 +62,7 @@
             
             <header class="game-header">
                 <h1 class="logo-title" onclick="showView('home')">STUDY QUEST</h1>
-                <p class="logo-subtitle">勉強をクエストに変える、高校生のためのゲーミフィケーション</p>
+                <p class="logo-subtitle">勉強をクエストに変える、ゲーミフィケーション</p>
                 
                 <div class="player-status">
                     <div class="level-badge" id="levelDisplay">Lv. 1</div>
@@ -180,6 +192,159 @@
             <div class="steam-badge-name" id="steamBadgeName">集中マスター</div>
         </div>
     </div>
+
+    <!-- ⚙️ 5. 設定 -->
+<div
+    class="quest-card settings-card hidden"
+    id="card-settings"
+    onclick="handleCardClick('settings')"
+>
+
+    <button
+        class="back-btn"
+        onclick="goBackToHome(event)"
+    >
+        ◀ ホームへ戻る
+    </button>
+
+
+    <div class="card-header">
+
+        <div class="card-icon">
+            ⚙️
+        </div>
+
+        <h2>設定</h2>
+
+    </div>
+
+
+    <div
+        class="card-body settings-body"
+        onclick="event.stopPropagation()"
+    >
+
+
+        <!-- 👤 プレイヤー情報 -->
+
+        <div class="settings-section">
+
+            <h3>👤 プレイヤー情報</h3>
+
+            <p>
+                ランキングなどに表示する名前を設定できます。
+            </p>
+
+
+            <input
+                type="text"
+                id="playerNameInput"
+                class="input-game"
+                maxlength="15"
+                placeholder="ニックネームを入力"
+            >
+
+
+            <button
+                class="btn-add"
+                onclick="savePlayerName(event)"
+            >
+                名前を保存
+            </button>
+
+        </div>
+
+
+        <!-- 🏆 ランキング -->
+
+        <div class="settings-section">
+
+            <h3>🏆 ランキング</h3>
+
+            <p id="rankingStatus">
+                現在：ランキングに参加していません
+            </p>
+
+
+            <div class="settings-button-group">
+
+                <button
+                    class="btn-ranking join"
+                    onclick="setRankingParticipation(true, event)"
+                >
+                    🏆 参加する
+                </button>
+
+
+                <button
+                    class="btn-ranking leave"
+                    onclick="setRankingParticipation(false, event)"
+                >
+                    🙈 参加しない
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- 🔊 効果音 -->
+
+        <div class="settings-section">
+
+            <h3>🔊 効果音</h3>
+
+            <p id="soundStatus">
+                現在：ON
+            </p>
+
+
+            <div class="settings-button-group">
+
+                <button
+                    class="btn-ranking join"
+                    onclick="setSoundEnabled(true, event)"
+                >
+                    🔊 ON
+                </button>
+
+
+                <button
+                    class="btn-ranking leave"
+                    onclick="setSoundEnabled(false, event)"
+                >
+                    🔇 OFF
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- 💾 データ管理 -->
+
+        <div class="settings-section danger-section">
+
+            <h3>💾 データ管理</h3>
+
+            <p>
+                レベル、EXP、苦手問題、実績、設定を初期化します。
+            </p>
+
+
+            <button
+                class="btn-reset"
+                onclick="resetGameData(event)"
+            >
+                🗑️ データをリセット
+            </button>
+
+        </div>
+
+
+    </div>
+
+</div>
 
     <script src="script.js"></script>
 </body>
