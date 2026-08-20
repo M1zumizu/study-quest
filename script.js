@@ -81,8 +81,6 @@ let activeQuizList = [...defaultQuizList];
 // 現在の問題番号
 let currentQuizIndex = 0;
 
-
-
 // ==========================================
 // 🖥️ 画面切り替え
 // ==========================================
@@ -91,26 +89,207 @@ function showView(viewName) {
 
     currentView = viewName;
 
+    // 各カードを取得
     const cards = {
 
+        timer:
+            document.getElementById('card-timer'),
 
-    timer:
-        document.getElementById('card-timer'),
+        weakness:
+            document.getElementById('card-weakness'),
 
-    weakness:
-        document.getElementById('card-weakness'),
+        review:
+            document.getElementById('card-review'),
 
-    review:
-        document.getElementById('card-review'),
+        achievement:
+            document.getElementById('card-achievement'),
 
-    achievement:
-        document.getElementById('card-achievement'),
+        settings:
+            document.getElementById('card-settings')
 
-    settings:
-        document.getElementById('card-settings')
+    };
+
+
+    // ==========================================
+    // 🏠 ホーム画面
+    // ==========================================
+
+    if (viewName === 'home') {
+
+        document.body.className = 'view-home';
+
+
+        // 設定カードはホームでは表示しない
+        for (const key in cards) {
+
+            if (!cards[key]) {
+                continue;
+            }
+
+
+            if (key === 'settings') {
+
+                cards[key].classList.add('hidden');
+
+            }
+
+            else {
+
+                cards[key].classList.remove('hidden');
+
+            }
+
+        }
+
+
+        // サイドバーの選択状態を解除
+        clearSidebarActive();
+
+
+        return;
+
+    }
+
+
+    // ==========================================
+    // 📄 個別画面
+    // ==========================================
+
+    document.body.className = 'view-single';
+
+
+    // 選択されたカードだけ表示
+    for (const key in cards) {
+
+        if (!cards[key]) {
+            continue;
+        }
+
+
+        if (key === viewName) {
+
+            cards[key].classList.remove('hidden');
+
+        }
+
+        else {
+
+            cards[key].classList.add('hidden');
+
+        }
+
+    }
+
+
+    // サイドバーの選択状態を更新
+    updateSidebarActive(viewName);
+
+
+    // ==========================================
+    // ⏱️ タイマー画面
+    // ==========================================
+
+    if (viewName === 'timer') {
+
+        unlockAchievement(
+            '最初の一歩',
+            'badge1'
+        );
+
+    }
+
+
+    // ==========================================
+    // ⚙️ 設定画面
+    // ==========================================
+
+    if (viewName === 'settings') {
+
+        updateSettingsDisplay();
+
+    }
 
 }
 
+
+    // ======================================
+    // 🏠 ホーム画面の場合
+    // ======================================
+
+    if (viewName === 'home') {
+
+        document.body.className =
+            "view-home";
+
+
+        // 設定以外のカードを表示
+        for (let key in cards) {
+
+            if (key === 'settings') {
+
+                cards[key].classList.add('hidden');
+
+            } else {
+
+                cards[key].classList.remove('hidden');
+
+            }
+
+        }
+
+
+        clearSidebarActive();
+
+    }
+
+
+    // ======================================
+    // 📱 各機能を開く場合
+    // ======================================
+
+    else {
+
+        document.body.className =
+            "view-single";
+
+
+        // 選択したカードだけ表示
+        for (let key in cards) {
+
+            if (key === viewName) {
+
+                cards[key].classList.remove('hidden');
+
+            } else {
+
+                cards[key].classList.add('hidden');
+
+            }
+
+        }
+
+
+        // サイドバーの選択状態を更新
+        updateSidebarActive(viewName);
+
+
+        // タイマーを初めて開いた場合
+        if (viewName === 'timer') {
+
+            unlockAchievement(
+                '最初の一歩',
+                'badge1'
+            );
+
+        }
+
+
+        // ⚙️ 設定を開いた場合
+        if (viewName === 'settings') {
+
+            updateSettingsDisplay();
+
+        }
 
     };
 
@@ -1276,8 +1455,6 @@ function saveData() {
 
 }
 
-
-
 // ==========================================
 // 📂 データ読み込み
 // ==========================================
@@ -1290,7 +1467,10 @@ function loadData() {
         );
 
 
+    // ==========================================
     // 保存データがない場合
+    // ==========================================
+
     if (!savedData) {
 
         console.log(
@@ -1298,27 +1478,30 @@ function loadData() {
         );
 
 
-        // 初期画面を表示
         updateGameDisplay();
 
         renderWeaknessList();
+
+        updateSettingsDisplay();
 
         return;
 
     }
 
 
+    // ==========================================
+    // 保存データを読み込む
+    // ==========================================
+
     try {
 
-        // JSON文字列を
-        // JavaScriptのデータに戻す
         const gameState =
             JSON.parse(savedData);
 
 
-        // --------------------------
-        // レベルを復元
-        // --------------------------
+        // ==========================================
+        // レベル
+        // ==========================================
 
         if (
             gameState.level !== undefined
@@ -1330,9 +1513,9 @@ function loadData() {
         }
 
 
-        // --------------------------
-        // EXPを復元
-        // --------------------------
+        // ==========================================
+        // EXP
+        // ==========================================
 
         if (
             gameState.exp !== undefined
@@ -1344,9 +1527,9 @@ function loadData() {
         }
 
 
-        // --------------------------
-        // 苦手問題を復元
-        // --------------------------
+        // ==========================================
+        // 苦手問題
+        // ==========================================
 
         if (
             Array.isArray(
@@ -1360,9 +1543,9 @@ function loadData() {
         }
 
 
-        // --------------------------
-        // アチーブメントを復元
-        // --------------------------
+        // ==========================================
+        // アチーブメント
+        // ==========================================
 
         if (
             gameState.achievements
@@ -1374,7 +1557,46 @@ function loadData() {
         }
 
 
+        // ==========================================
+        // ⚙️ 設定
+        // ==========================================
+
+        // ニックネーム
+        if (
+            gameState.playerName !== undefined
+        ) {
+
+            playerName =
+                gameState.playerName;
+
+        }
+
+
+        // ランキング参加状態
+        if (
+            gameState.rankingEnabled !== undefined
+        ) {
+
+            rankingEnabled =
+                gameState.rankingEnabled;
+
+        }
+
+
+        // 効果音
+        if (
+            gameState.soundEnabled !== undefined
+        ) {
+
+            soundEnabled =
+                gameState.soundEnabled;
+
+        }
+
+
+        // ==========================================
         // 画面を更新
+        // ==========================================
 
         updateGameDisplay();
 
@@ -1384,12 +1606,14 @@ function loadData() {
 
         updateSettingsDisplay();
 
+
         console.log(
             "データを読み込みました！",
             gameState
         );
 
     }
+
 
     catch (error) {
 

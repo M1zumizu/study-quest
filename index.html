@@ -75,112 +75,201 @@
 
             <div class="dashboard-grid" id="main-grid">
 
-                <!-- ⏱️ 1. タイマー＆レベルアップ -->
-                <div class="quest-card timer-card" id="card-timer" onclick="handleCardClick('timer')">
-                    <button class="back-btn" onclick="goBackToHome(event)">◀ ホームへ戻る</button>
+    <!-- ① タイマー -->
+    <div
+        class="quest-card timer-card"
+        id="card-timer"
+        onclick="handleCardClick('timer')"
+    >
+        <!-- 既存の内容 -->
+    </div>
 
-                    <div class="card-header">
-                        <div class="card-icon">⏱️</div>
-                        <h2>タイマー＆レベル</h2>
-                    </div>
-                    
-                    <div class="card-body">
-                        <div class="timer-display" id="timerDisplay">00:00</div>
-                        <div class="btn-group">
-                            <button class="btn-game btn-start" id="startBtn" onclick="startTimer(event)">クエスト開始！</button>
-                            <button class="btn-game btn-stop" id="stopBtn" onclick="stopTimer(event)">完了（経験値GET！）</button>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- 📝 2. 苦手問題の記録 -->
-                <div class="quest-card weakness-card" id="card-weakness" onclick="handleCardClick('weakness')">
-                    <button class="back-btn" onclick="goBackToHome(event)">◀ ホームへ戻る</button>
+    <!-- ② 苦手問題 -->
+    <div
+        class="quest-card weakness-card"
+        id="card-weakness"
+        onclick="handleCardClick('weakness')"
+    >
+        <!-- 既存の内容 -->
+    </div>
 
-                    <div class="card-header">
-                        <div class="card-icon">📝</div>
-                        <h2>苦手問題ログ</h2>
-                    </div>
-                    
-                    <div class="card-body" onclick="event.stopPropagation()">
-                        <input type="text" class="input-game" id="weaknessInput" placeholder="例：英単語 obvious、二次関数の公式">
-                        <button class="btn-add" onclick="addWeakness(event)">苦手ハンターに登録！</button>
 
-                        <div class="log-list" id="weaknessList">
-                            <div class="log-item empty-message">
-                                <span>まだ登録された苦手はありませんピヨ</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- ③ 復習 -->
+    <div
+        class="quest-card review-card"
+        id="card-review"
+        onclick="handleCardClick('review')"
+    >
+        <!-- 既存の内容 -->
+    </div>
 
-                <!-- 🔄 3. 復習機能 -->
-                <div class="quest-card review-card" id="card-review" onclick="handleCardClick('review')">
-                    <button class="back-btn" onclick="goBackToHome(event)">◀ ホームへ戻る</button>
 
-                    <div class="card-header">
-                        <div class="card-icon">🔄</div>
-                        <h2>復習クエスト</h2>
-                        <button class="btn-mini" onclick="toggleQuizForm(event)">＋作る</button>
-                    </div>
-                    
-                    <div class="card-body" onclick="event.stopPropagation()">
-                        <div class="quiz-creation-form" id="quizFormContainer">
-                            <h4>📝 クイズを自作するピヨ！</h4>
-                            <input type="text" id="customQuestion" class="input-game-mini" placeholder="問題 (例: studyの過去形)">
-                            <input type="text" id="customAnswer" class="input-game-mini" placeholder="答え (例: studied)">
-                            <button class="btn-add-mini" onclick="addCustomQuiz(event)">追加する！</button>
-                        </div>
-                        
-                        <div class="quiz-play-screen">
-                            <div class="quiz-card-display">
-                                <span class="quiz-tag">Quest 復習</span>
-                                <div class="quiz-question" id="quizQuestionText">読み込み中...</div>
-                                <div class="quiz-answer" id="quizAnswerText">?????</div>
-                            </div>
-                            
-                            <div class="quiz-action-buttons">
-                                <button class="btn-quiz btn-show-answer" id="showAnswerBtn" onclick="revealQuizAnswer(event)">答えを見る</button>
-                                <div class="quiz-verify-buttons" id="verifyButtons" style="display: none;">
-                                    <button class="btn-quiz btn-correct" onclick="evaluateQuiz(true, event)">正解！(+20XP)</button>
-                                    <button class="btn-quiz btn-wrong" onclick="evaluateQuiz(false, event)">間違い(苦手へ)</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- ④ アチーブメント -->
+    <div
+        class="quest-card achievement-card"
+        id="card-achievement"
+        onclick="handleCardClick('achievement')"
+    >
+        <!-- 既存の内容 -->
+    </div>
 
-                <!-- 🏆 4. アチーブメント -->
-                <div class="quest-card achievement-card" id="card-achievement" onclick="handleCardClick('achievement')">
-                    <button class="back-btn" onclick="goBackToHome(event)">◀ ホームへ戻る</button>
 
-                    <div class="card-header">
-                        <div class="card-icon">🏆</div>
-                        <h2>アチーブメント</h2>
-                    </div>
-                    
-                    <div class="card-body" onclick="event.stopPropagation()">
-                        <p class="achievement-desc">特定のミッションをクリアしてバッジを解放しよう！</p>
-                        <div class="achievement-grid">
-                            <div class="badge-item unlocked" id="badge1" onclick="triggerSteamTest('first')">
-                                <span class="badge-icon">🐣</span>
-                                <span>最初の一歩</span>
-                            </div>
-                            <div class="badge-item" id="badge2" onclick="triggerSteamTest('timer')">
-                                <span class="badge-icon">🔥</span>
-                                <span>集中マスター</span>
-                            </div>
-                            <div class="badge-item" id="badge3" onclick="triggerSteamTest('hero')">
-                                <span class="badge-icon">👑</span>
-                                <span>伝説の勇者</span>
-                            </div>
-                        </div>
-                    </div>
+    <!-- ==========================================
+         ⚙️ ⑤ 設定
+    ========================================== -->
+
+    <div
+        class="quest-card settings-card hidden"
+        id="card-settings"
+        onclick="handleCardClick('settings')"
+    >
+
+        <button
+            class="back-btn"
+            onclick="goBackToHome(event)"
+        >
+            ◀ ホームへ戻る
+        </button>
+
+
+        <div class="card-header">
+
+            <div class="card-icon">
+                ⚙️
+            </div>
+
+            <h2>設定</h2>
+
+        </div>
+
+
+        <div
+            class="card-body settings-body"
+            onclick="event.stopPropagation()"
+        >
+
+            <!-- 👤 プレイヤー情報 -->
+
+            <div class="settings-section">
+
+                <h3>👤 プレイヤー情報</h3>
+
+                <p>
+                    ニックネームを設定できます。
+                </p>
+
+
+                <input
+                    type="text"
+                    id="playerNameInput"
+                    class="input-game"
+                    maxlength="15"
+                    placeholder="ニックネームを入力"
+                >
+
+
+                <button
+                    class="btn-add"
+                    onclick="savePlayerName(event)"
+                >
+                    名前を保存
+                </button>
+
+            </div>
+
+
+            <!-- 🏆 ランキング -->
+
+            <div class="settings-section">
+
+                <h3>🏆 ランキング</h3>
+
+                <p id="rankingStatus">
+                    現在：ランキングに参加していません
+                </p>
+
+
+                <div class="settings-button-group">
+
+                    <button
+                        class="btn-ranking join"
+                        onclick="setRankingParticipation(true, event)"
+                    >
+                        🏆 参加する
+                    </button>
+
+
+                    <button
+                        class="btn-ranking leave"
+                        onclick="setRankingParticipation(false, event)"
+                    >
+                        🙈 参加しない
+                    </button>
+
                 </div>
 
             </div>
+
+
+            <!-- 🔊 効果音 -->
+
+            <div class="settings-section">
+
+                <h3>🔊 効果音</h3>
+
+                <p id="soundStatus">
+                    現在：ON
+                </p>
+
+
+                <div class="settings-button-group">
+
+                    <button
+                        class="btn-ranking join"
+                        onclick="setSoundEnabled(true, event)"
+                    >
+                        🔊 ON
+                    </button>
+
+
+                    <button
+                        class="btn-ranking leave"
+                        onclick="setSoundEnabled(false, event)"
+                    >
+                        🔇 OFF
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- 💾 データ管理 -->
+
+            <div class="settings-section danger-section">
+
+                <h3>💾 データ管理</h3>
+
+                <p>
+                    すべての学習データを初期化します。
+                </p>
+
+
+                <button
+                    class="btn-reset"
+                    onclick="resetGameData(event)"
+                >
+                    🗑️ データをリセット
+                </button>
+
+            </div>
+
         </div>
+
     </div>
+
+</div>
 
     <!-- 🎮 Steam風アチーブメントポップアップ -->
     <div class="steam-achievement" id="steamToast">
@@ -192,159 +281,7 @@
             <div class="steam-badge-name" id="steamBadgeName">集中マスター</div>
         </div>
     </div>
-
-    <!-- ⚙️ 5. 設定 -->
-<div
-    class="quest-card settings-card hidden"
-    id="card-settings"
-    onclick="handleCardClick('settings')"
->
-
-    <button
-        class="back-btn"
-        onclick="goBackToHome(event)"
-    >
-        ◀ ホームへ戻る
-    </button>
-
-
-    <div class="card-header">
-
-        <div class="card-icon">
-            ⚙️
-        </div>
-
-        <h2>設定</h2>
-
-    </div>
-
-
-    <div
-        class="card-body settings-body"
-        onclick="event.stopPropagation()"
-    >
-
-
-        <!-- 👤 プレイヤー情報 -->
-
-        <div class="settings-section">
-
-            <h3>👤 プレイヤー情報</h3>
-
-            <p>
-                ランキングなどに表示する名前を設定できます。
-            </p>
-
-
-            <input
-                type="text"
-                id="playerNameInput"
-                class="input-game"
-                maxlength="15"
-                placeholder="ニックネームを入力"
-            >
-
-
-            <button
-                class="btn-add"
-                onclick="savePlayerName(event)"
-            >
-                名前を保存
-            </button>
-
-        </div>
-
-
-        <!-- 🏆 ランキング -->
-
-        <div class="settings-section">
-
-            <h3>🏆 ランキング</h3>
-
-            <p id="rankingStatus">
-                現在：ランキングに参加していません
-            </p>
-
-
-            <div class="settings-button-group">
-
-                <button
-                    class="btn-ranking join"
-                    onclick="setRankingParticipation(true, event)"
-                >
-                    🏆 参加する
-                </button>
-
-
-                <button
-                    class="btn-ranking leave"
-                    onclick="setRankingParticipation(false, event)"
-                >
-                    🙈 参加しない
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <!-- 🔊 効果音 -->
-
-        <div class="settings-section">
-
-            <h3>🔊 効果音</h3>
-
-            <p id="soundStatus">
-                現在：ON
-            </p>
-
-
-            <div class="settings-button-group">
-
-                <button
-                    class="btn-ranking join"
-                    onclick="setSoundEnabled(true, event)"
-                >
-                    🔊 ON
-                </button>
-
-
-                <button
-                    class="btn-ranking leave"
-                    onclick="setSoundEnabled(false, event)"
-                >
-                    🔇 OFF
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <!-- 💾 データ管理 -->
-
-        <div class="settings-section danger-section">
-
-            <h3>💾 データ管理</h3>
-
-            <p>
-                レベル、EXP、苦手問題、実績、設定を初期化します。
-            </p>
-
-
-            <button
-                class="btn-reset"
-                onclick="resetGameData(event)"
-            >
-                🗑️ データをリセット
-            </button>
-
-        </div>
-
-
-    </div>
-
-</div>
+    
 
     <script src="script.js"></script>
 </body>
