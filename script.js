@@ -89,24 +89,12 @@ function showView(viewName) {
 
     currentView = viewName;
 
-    // 各カードを取得
     const cards = {
-
-        timer:
-            document.getElementById('card-timer'),
-
-        weakness:
-            document.getElementById('card-weakness'),
-
-        review:
-            document.getElementById('card-review'),
-
-        achievement:
-            document.getElementById('card-achievement'),
-
-        settings:
-            document.getElementById('card-settings')
-
+        timer: document.getElementById('card-timer'),
+        weakness: document.getElementById('card-weakness'),
+        review: document.getElementById('card-review'),
+        achievement: document.getElementById('card-achievement'),
+        settings: document.getElementById('card-settings')
     };
 
 
@@ -118,22 +106,17 @@ function showView(viewName) {
 
         document.body.className = 'view-home';
 
-
-        // 設定カードはホームでは表示しない
         for (const key in cards) {
 
             if (!cards[key]) {
                 continue;
             }
 
-
             if (key === 'settings') {
 
                 cards[key].classList.add('hidden');
 
-            }
-
-            else {
+            } else {
 
                 cards[key].classList.remove('hidden');
 
@@ -141,13 +124,9 @@ function showView(viewName) {
 
         }
 
-
-        // サイドバーの選択状態を解除
         clearSidebarActive();
 
-
         return;
-
     }
 
 
@@ -157,22 +136,17 @@ function showView(viewName) {
 
     document.body.className = 'view-single';
 
-
-    // 選択されたカードだけ表示
     for (const key in cards) {
 
         if (!cards[key]) {
             continue;
         }
 
-
         if (key === viewName) {
 
             cards[key].classList.remove('hidden');
 
-        }
-
-        else {
+        } else {
 
             cards[key].classList.add('hidden');
 
@@ -181,12 +155,11 @@ function showView(viewName) {
     }
 
 
-    // サイドバーの選択状態を更新
     updateSidebarActive(viewName);
 
 
     // ==========================================
-    // ⏱️ タイマー画面
+    // ⏱️ タイマー
     // ==========================================
 
     if (viewName === 'timer') {
@@ -200,7 +173,7 @@ function showView(viewName) {
 
 
     // ==========================================
-    // ⚙️ 設定画面
+    // ⚙️ 設定
     // ==========================================
 
     if (viewName === 'settings') {
@@ -1399,8 +1372,6 @@ function triggerSteamTest(type) {
 
 }
 
-
-
 // ==========================================
 // 💾 データ保存
 // ==========================================
@@ -1409,49 +1380,60 @@ function saveData() {
 
     const gameState = {
 
-    // レベル
-    level: currentLevel,
+        // レベル
+        level: currentLevel,
 
-    // EXP
-    exp: totalExp,
+        // EXP
+        exp: totalExp,
 
-    // 苦手問題
-    logs: nigateLogs,
+        // 苦手問題
+        logs: nigateLogs,
 
-    // アチーブメント
-    achievements: unlockedAchievements,
+        // アチーブメント
+        achievements: unlockedAchievements,
 
-    // ======================
-    // ⚙️ 設定
-    // ======================
+        // ニックネーム
+        playerName: playerName,
 
-    // ニックネーム
-    playerName: playerName,
+        // ランキング参加
+        rankingEnabled: rankingEnabled,
 
-    // ランキング参加
-    rankingEnabled: rankingEnabled,
-
-    // 効果音
-    soundEnabled: soundEnabled
+        // 効果音
+        soundEnabled: soundEnabled
 
     };
 
 
-    // JavaScriptのデータを
-    // JSON文字列に変換して保存
-    localStorage.setItem(
+    try {
 
-        'studyQuestData',
+        localStorage.setItem(
+            'studyQuestData',
+            JSON.stringify(gameState)
+        );
 
-        JSON.stringify(gameState)
+        console.log(
+            'Study Quest：データ保存成功',
+            gameState
+        );
 
-    );
+        return true;
 
+    }
 
-    console.log(
-        "データを保存しました！",
-        gameState
-    );
+    catch (error) {
+
+        console.error(
+            'Study Quest：データ保存失敗',
+            error
+        );
+
+        alert(
+            'データの保存に失敗しました。'
+        );
+
+        return false;
+
+    }
 
 }
 
@@ -1474,9 +1456,8 @@ function loadData() {
     if (!savedData) {
 
         console.log(
-            "保存データはありません"
+            'Study Quest：保存データなし'
         );
-
 
         updateGameDisplay();
 
@@ -1490,7 +1471,7 @@ function loadData() {
 
 
     // ==========================================
-    // 保存データを読み込む
+    // 保存データを復元
     // ==========================================
 
     try {
@@ -1544,11 +1525,13 @@ function loadData() {
 
 
         // ==========================================
-        // アチーブメント
+        // 🏆 アチーブメント
         // ==========================================
 
         if (
             gameState.achievements
+            &&
+            typeof gameState.achievements === 'object'
         ) {
 
             unlockedAchievements =
@@ -1558,10 +1541,9 @@ function loadData() {
 
 
         // ==========================================
-        // ⚙️ 設定
+        // 👤 ニックネーム
         // ==========================================
 
-        // ニックネーム
         if (
             gameState.playerName !== undefined
         ) {
@@ -1572,7 +1554,10 @@ function loadData() {
         }
 
 
-        // ランキング参加状態
+        // ==========================================
+        // 🏆 ランキング参加状態
+        // ==========================================
+
         if (
             gameState.rankingEnabled !== undefined
         ) {
@@ -1583,7 +1568,10 @@ function loadData() {
         }
 
 
-        // 効果音
+        // ==========================================
+        // 🔊 効果音
+        // ==========================================
+
         if (
             gameState.soundEnabled !== undefined
         ) {
@@ -1595,7 +1583,7 @@ function loadData() {
 
 
         // ==========================================
-        // 画面を更新
+        // 画面更新
         // ==========================================
 
         updateGameDisplay();
@@ -1608,17 +1596,16 @@ function loadData() {
 
 
         console.log(
-            "データを読み込みました！",
+            'Study Quest：データ読み込み成功',
             gameState
         );
 
     }
 
-
     catch (error) {
 
         console.error(
-            "データの読み込みに失敗しました",
+            'Study Quest：データ読み込み失敗',
             error
         );
 
@@ -1677,28 +1664,45 @@ function restoreAchievements() {
 
     const achievementMap = {
 
-        '最初の一歩':
-            'badge1',
+        '最初の一歩': 'badge1',
 
-        '集中マスター':
-            'badge2',
+        '集中マスター': 'badge2',
 
-        '伝説の勇者':
-            'badge3'
+        '伝説の勇者': 'badge3'
 
     };
 
 
+    // まず全部ロック状態に戻す
+    for (const achievementName in achievementMap) {
+
+        const badgeId =
+            achievementMap[achievementName];
+
+        const badge =
+            document.getElementById(badgeId);
+
+        if (badge) {
+
+            badge.classList.remove(
+                'unlocked'
+            );
+
+        }
+
+    }
+
+
+    // 保存されている解除済みだけ解除
     for (
         const achievementName
         in unlockedAchievements
     ) {
 
-        // 解除済みでなければスキップ
         if (
-            !unlockedAchievements[
+            unlockedAchievements[
                 achievementName
-            ]
+            ] !== true
         ) {
 
             continue;
@@ -1743,7 +1747,10 @@ function restoreAchievements() {
 
 function savePlayerName(event) {
 
-    event.stopPropagation();
+    if (event) {
+        event.stopPropagation();
+    }
+
 
     const input =
         document.getElementById(
@@ -1751,38 +1758,45 @@ function savePlayerName(event) {
         );
 
 
+    if (!input) {
+
+        console.error(
+            'playerNameInput が見つかりません'
+        );
+
+        return;
+
+    }
+
+
     const value =
         input.value.trim();
 
 
-    // 空欄の場合
-    if (value === "") {
+    if (value === '') {
 
-        playerName = "名無し";
+        playerName = '名無し';
 
-    }
-
-    else {
+    } else {
 
         playerName = value;
 
     }
 
 
-    // 入力欄にも反映
-    input.value = playerName;
+    input.value =
+        playerName;
 
 
     // 保存
     saveData();
 
+
     alert(
-        "ニックネームを保存しました！"
+        'ニックネームを保存しました！'
     );
 
 }
-
-
 
 // ==========================================
 // 🏆 ランキング参加設定
@@ -1793,37 +1807,38 @@ function setRankingParticipation(
     event
 ) {
 
-    event.stopPropagation();
+    if (event) {
+        event.stopPropagation();
+    }
 
 
-    rankingEnabled = isEnabled;
+    rankingEnabled =
+        Boolean(isEnabled);
 
 
-    updateSettingsDisplay();
-
-
+    // 保存
     saveData();
+
+
+    // 表示更新
+    updateSettingsDisplay();
 
 
     if (rankingEnabled) {
 
         alert(
-            "ランキングへの参加をONにしました！"
+            'ランキングへの参加をONにしました！'
         );
 
-    }
-
-    else {
+    } else {
 
         alert(
-            "ランキングへの参加をOFFにしました。"
+            'ランキングへの参加をOFFにしました。'
         );
 
     }
 
 }
-
-
 
 // ==========================================
 // 🔊 効果音設定
@@ -1834,26 +1849,33 @@ function setSoundEnabled(
     event
 ) {
 
-    event.stopPropagation();
+    if (event) {
+        event.stopPropagation();
+    }
 
 
-    soundEnabled = isEnabled;
+    soundEnabled =
+        Boolean(isEnabled);
 
 
-    updateSettingsDisplay();
-
-
+    // 保存
     saveData();
+
+
+    // 表示更新
+    updateSettingsDisplay();
 
 }
 
-
-
 // ==========================================
-// ⚙️ 設定画面を更新
+// ⚙️ 設定画面表示更新
 // ==========================================
 
 function updateSettingsDisplay() {
+
+    // ==========================================
+    // 👤 ニックネーム
+    // ==========================================
 
     const playerNameInput =
         document.getElementById(
@@ -1861,19 +1883,6 @@ function updateSettingsDisplay() {
         );
 
 
-    const rankingStatus =
-        document.getElementById(
-            'rankingStatus'
-        );
-
-
-    const soundStatus =
-        document.getElementById(
-            'soundStatus'
-        );
-
-
-    // ニックネーム表示
     if (playerNameInput) {
 
         playerNameInput.value =
@@ -1882,40 +1891,54 @@ function updateSettingsDisplay() {
     }
 
 
-    // ランキング状態
+    // ==========================================
+    // 🏆 ランキング
+    // ==========================================
+
+    const rankingStatus =
+        document.getElementById(
+            'rankingStatus'
+        );
+
+
     if (rankingStatus) {
 
         if (rankingEnabled) {
 
             rankingStatus.innerText =
-                "現在：ランキングに参加しています 🏆";
+                '現在：ランキングに参加しています 🏆';
 
-        }
-
-        else {
+        } else {
 
             rankingStatus.innerText =
-                "現在：ランキングに参加していません";
+                '現在：ランキングに参加していません';
 
         }
 
     }
 
 
-    // 効果音状態
+    // ==========================================
+    // 🔊 効果音
+    // ==========================================
+
+    const soundStatus =
+        document.getElementById(
+            'soundStatus'
+        );
+
+
     if (soundStatus) {
 
         if (soundEnabled) {
 
             soundStatus.innerText =
-                "現在：ON 🔊";
+                '現在：ON 🔊';
 
-        }
-
-        else {
+        } else {
 
             soundStatus.innerText =
-                "現在：OFF 🔇";
+                '現在：OFF 🔇';
 
         }
 
@@ -1963,7 +1986,6 @@ function resetGameData(event) {
 // ==========================================
 
 window.addEventListener(
-
     'DOMContentLoaded',
     () => {
 
@@ -1972,6 +1994,9 @@ window.addEventListener(
 
         // クイズを表示
         loadQuizQuestion();
+
+        // 最初はホーム
+        showView('home');
 
     }
 );
