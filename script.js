@@ -230,12 +230,13 @@ function updateAllGenreSelects() {
 }
 
 // ==========================================
-// 🖥️ 画面切り替え（不具合修正版）
+// 🖥️ 画面切り替え
 // ==========================================
 function showView(viewName) {
     currentView = viewName;
 
     const cards = {
+        guide: document.getElementById('card-guide'), // 👈 追加
         timer: document.getElementById('card-timer'),
         weakness: document.getElementById('card-weakness'),
         review: document.getElementById('card-review'),
@@ -249,14 +250,13 @@ function showView(viewName) {
         for (const key in cards) {
             if (!cards[key]) continue;
             
-            // ホーム画面で表示するメインカード群の制御
-            if (key === 'settings' || key === 'ranking') {
+            // ホーム画面で非表示にするカードを指定
+            if (key === 'settings' || key === 'ranking' || key === 'guide') { // 👈 'guide' を追加
                 cards[key].classList.add('hidden');
             } else {
                 cards[key].classList.remove('hidden');
             }
 
-            // カードの幅・グリッド配置の残存スタイルをリセット
             cards[key].style.width = '';
             cards[key].style.gridColumn = '';
         }
@@ -264,7 +264,6 @@ function showView(viewName) {
         return;
     }
 
-    // 単一画面表示（view-single）時
     document.body.className = 'view-single';
     for (const key in cards) {
         if (!cards[key]) continue;
@@ -273,18 +272,25 @@ function showView(viewName) {
         } else {
             cards[key].classList.add('hidden');
         }
-        
-        // 残存スタイルをリセット
-        cards[key].style.width = '';
-        cards[key].style.gridColumn = '';
     }
 
     updateSidebarActive(viewName);
 
-    if (viewName === 'achievement') renderAchievements();
-    if (viewName === 'settings') updateSettingsDisplay();
-    if (viewName === 'ranking') loadRanking();
-    if (viewName === 'review') loadPublicQuizzes();
+    if (viewName === 'achievement') {
+        renderAchievements();
+    }
+
+    if (viewName === 'settings') {
+        updateSettingsDisplay();
+    }
+
+    if (viewName === 'ranking') {
+        loadRanking();
+    }
+
+    if (viewName === 'review') {
+        loadPublicQuizzes();
+    }
 }
 
 function handleCardClick(cardName) {

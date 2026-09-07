@@ -667,3 +667,31 @@ select option {
 .guide-content li {
     margin-bottom: 4px;
 }
+
+/* 💡 使い方カード用スタイル */
+.guide-card { border-top: 5px solid #f59e0b; }
+
+.guide-section {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+}
+
+.guide-section h3 {
+    margin: 0 0 6px 0;
+    font-size: 0.95rem;
+    color: var(--primary-neon);
+}
+
+.guide-section p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-sub);
+    line-height: 1.5;
+}
+
+.guide-section strong {
+    color: var(--green-neon);
+}
