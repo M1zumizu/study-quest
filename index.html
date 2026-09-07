@@ -122,10 +122,25 @@
                                 <input type="text" id="customExplanation" class="input-game-mini" placeholder="解説（任意）">
                                 <button type="submit" class="btn-add-mini">追加・保存</button>
                             </form>
+
+                            <!-- 使い方・機能説明 -->
+                            <details class="guide-box" style="margin-top: 10px;">
+                                <summary>💡 このアプリの使い方・機能</summary>
+                                <div class="guide-content">
+                                    <ul>
+                                        <li><strong>クイズを作る:</strong> 好きな問題を作成してマイ問題に保存できます。</li>
+                                        <li><strong>クイズを共有:</strong> 自作クイズの「共有」を押すと「みんなの問題」に公開されます。</li>
+                                        <li><strong>みんなの問題を取り込む:</strong> 「マイ問題に追加」を押すと自分のリストに登録できます。</li>
+                                        <li><strong>共有解除・削除:</strong> 自分が公開した問題はいつでも非公開や削除が可能です。</li>
+                                    </ul>
+                                </div>
+                            </details>
+
+                            <!-- 作成済みクイズ一覧 -->
                             <div id="quizManageList" style="margin-top:10px; max-height:150px; overflow-y:auto;"></div>
                         </div>
 
-　　　　　　　　<!--みんなの問題エリア -->
+                        <!-- みんなの問題エリア -->
                         <div style="margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 12px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                 <span style="font-weight: bold; font-size: 0.9rem;">🌐 みんなの問題</span>
@@ -135,8 +150,8 @@
                             <div id="publicQuizList"></div>
                         </div>
 
-                    </div> <!-- ◀️ 不足していた card-body の閉じタグ -->
-                </div> <!-- ◀️ 不足していた card-review の閉じタグ -->
+                    </div>
+                </div>
 
                 <div id="card-achievement" class="quest-card achievement-card" onclick="handleCardClick('achievement')">
                     <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
@@ -236,7 +251,7 @@
         </div>
     </div>
 
-<script type="module">
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, query, orderBy, limit, getDocs, doc, setDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 

@@ -7,7 +7,7 @@
 // ==========================================
 let totalExp = 0;
 let currentLevel = 1;
-let seconds = 0;
+let endTime = 0;
 let timerInterval = null;
 let currentView = 'home';
 let nigateLogs = [];
@@ -230,7 +230,7 @@ function updateAllGenreSelects() {
 }
 
 // ==========================================
-// 🖥️ 画面切り替え
+// 🖥️ 画面切り替え（不具合修正版）
 // ==========================================
 function showView(viewName) {
     currentView = viewName;
@@ -248,16 +248,23 @@ function showView(viewName) {
         document.body.className = 'view-home';
         for (const key in cards) {
             if (!cards[key]) continue;
+            
+            // ホーム画面で表示するメインカード群の制御
             if (key === 'settings' || key === 'ranking') {
                 cards[key].classList.add('hidden');
             } else {
                 cards[key].classList.remove('hidden');
             }
+
+            // カードの幅・グリッド配置の残存スタイルをリセット
+            cards[key].style.width = '';
+            cards[key].style.gridColumn = '';
         }
         clearSidebarActive();
         return;
     }
 
+    // 単一画面表示（view-single）時
     document.body.className = 'view-single';
     for (const key in cards) {
         if (!cards[key]) continue;
@@ -266,25 +273,18 @@ function showView(viewName) {
         } else {
             cards[key].classList.add('hidden');
         }
+        
+        // 残存スタイルをリセット
+        cards[key].style.width = '';
+        cards[key].style.gridColumn = '';
     }
 
     updateSidebarActive(viewName);
 
-    if (viewName === 'achievement') {
-        renderAchievements();
-    }
-
-    if (viewName === 'settings') {
-        updateSettingsDisplay();
-    }
-
-    if (viewName === 'ranking') {
-        loadRanking();
-    }
-
-    if (viewName === 'review') {
-        loadPublicQuizzes(); // ✨ この1行を追加
-    }
+    if (viewName === 'achievement') renderAchievements();
+    if (viewName === 'settings') updateSettingsDisplay();
+    if (viewName === 'ranking') loadRanking();
+    if (viewName === 'review') loadPublicQuizzes();
 }
 
 function handleCardClick(cardName) {
@@ -314,74 +314,99 @@ function updateSidebarActive(viewName) {
 }
 
 // ==========================================
-// ⏱️ タイマー機能
+// ⏱️ タイマー機能 (スリープ自動補正対応)
 // ==========================================
-function startTimer(event) {
+function startTimer(event, seconds = 1500) { // デフォルト25分 (1500秒)
     if (event) event.stopPropagation();
     if (timerInterval) return;
 
     unlockAchievement('最初の一歩', 'badge1');
 
-    document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('stopBtn').style.display = 'inline-block';
+    endTime = Date.now() + seconds * 1000;
 
-    timerInterval = setInterval(() => {
-        seconds++;
-        updateTimerDisplay();
-    }, 1000);
+    // スリープ復帰を検知するイベントを設定
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'inline-block';
+
+    timerInterval = setInterval(updateTimer, 250);
+    updateTimer();
 }
 
 function stopTimer(event) {
     if (event) event.stopPropagation();
 
-    clearInterval(timerInterval);
-    timerInterval = null;
-
-    if (seconds >= 1800) {
-        unlockAchievement('⏱️ 集中モード', 'badge5');
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
     }
 
-    const todayStr = getDateKeys().daily;
-    if (seconds > 0) {
-        if (lastStudyDate && lastStudyDate !== todayStr) {
-            const lastDate = new Date(lastStudyDate);
-            const todayDate = new Date(todayStr);
-            const diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 1) {
-                streakCount++;
-                if (streakCount >= 3) {
-                    unlockAchievement('🔥 3日間の冒険', 'badge4');
-                }
-            } else if (diffDays > 1) {
-                unlockAchievement('🌱 再出発', 'badge3');
-                streakCount = 1;
-            }
-        } else if (!lastStudyDate) {
-            streakCount = 1;
-        }
-        lastStudyDate = todayStr;
-    }
-
-    const earnedExp = seconds * 5;
-    if (earnedExp > 0) {
-        addExpWithPeriod(earnedExp);
-    } else {
-        saveData();
-    }
-
-    document.getElementById('startBtn').style.display = 'inline-block';
-    document.getElementById('stopBtn').style.display = 'none';
-
-    seconds = 0;
-    updateTimerDisplay();
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
 }
 
-function updateTimerDisplay() {
-    const min = Math.floor(seconds / 60);
-    const sec = seconds % 60;
-    document.getElementById('timerDisplay').innerText =
-        String(min).padStart(2, '0') + ":" + String(sec).padStart(2, '0');
+function updateTimer() {
+    const now = Date.now();
+    const remainingMs = endTime - now;
+    const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+
+    const min = String(Math.floor(remainingSec / 60)).padStart(2, '0');
+    const sec = String(remainingSec % 60).padStart(2, '0');
+
+    const display = document.getElementById('timerDisplay');
+    if (display) display.innerText = `${min}:${sec}`;
+
+    if (remainingMs <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        onTimerEnd();
+    }
+}
+
+function handleVisibilityChange() {
+    if (!document.hidden && timerInterval) {
+        updateTimer();
+    }
+}
+
+function onTimerEnd() {
+    unlockAchievement('⏱️ 集中モード', 'badge5');
+
+    const todayStr = getDateKeys().daily;
+    if (lastStudyDate && lastStudyDate !== todayStr) {
+        const lastDate = new Date(lastStudyDate);
+        const todayDate = new Date(todayStr);
+        const diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+            streakCount++;
+            if (streakCount >= 3) {
+                unlockAchievement('🔥 3日間の冒険', 'badge4');
+            }
+        } else if (diffDays > 1) {
+            unlockAchievement('🌱 再出発', 'badge3');
+            streakCount = 1;
+        }
+    } else if (!lastStudyDate) {
+        streakCount = 1;
+    }
+    lastStudyDate = todayStr;
+
+    const earnedExp = 100; // タイマー完了時獲得XP
+    addExpWithPeriod(earnedExp);
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+
+    alert("時間になりました！お疲れ様でした！");
 }
 
 function checkLevelUp() {
@@ -760,19 +785,17 @@ function renderQuizManageList() {
     activeQuizList.forEach(q => {
         const isSample = q.isSample || q.genre === "サンプル問題";
         const div = document.createElement('div');
-        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin-bottom:4px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px;';
+        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; margin-bottom:4px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px; min-width:0;';
         
-        // 自作問題の横に「共有」ボタンを追加
         const actionHtml = isSample 
-            ? `<span style="font-size:0.65rem; color:#888;">固定</span>`
+            ? `<span style="font-size:0.65rem; color:#888; flex-shrink:0;">固定</span>`
             : `
-                <div style="display:flex; gap:4px;">
-                    <button onclick="shareQuizToPublic(${q.id || 0}, event)" style="font-size:0.65rem; color:var(--green-neon, #4ade80); border:1px solid var(--green-neon, #4ade80); background:none; border-radius:3px; cursor:pointer; padding:2px 4px;">共有</button>
-                    <button onclick="deleteCustomQuiz(${q.id || 0}, event)" style="font-size:0.65rem; color:#ef4444; border:1px solid #ef4444; background:none; border-radius:3px; cursor:pointer; padding:2px 4px;">削除</button>
+                <div style="display:flex; gap:4px; flex-shrink:0;">
+                    <button onclick="shareQuizToPublic(${q.id || 0}, event)" style="font-size:0.65rem; color:var(--green-neon, #4ade80); border:1px solid var(--green-neon, #4ade80); background:none; border-radius:3px; cursor:pointer; padding:2px 4px; white-space:nowrap;">共有</button>
+                    <button onclick="deleteCustomQuiz(${q.id || 0}, event)" style="font-size:0.65rem; color:#ef4444; border:1px solid #ef4444; background:none; border-radius:3px; cursor:pointer; padding:2px 4px; white-space:nowrap;">削除</button>
                 </div>
               `;
 
-        // 問題文テキストの幅制御（flex:1; min-width:0; に変更）
         div.innerHTML = `
             <span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;">[${q.genre || '国語'}] ${q.q}</span>
             ${actionHtml}
@@ -842,7 +865,6 @@ function renderAchievements() {
     });
 }
 
-// 🏆 アチーブメント解放処理（統合・重複解消済み）
 function unlockAchievement(name, badgeId) {
     if ((badgeId && unlockedAchievements[badgeId]) || unlockedAchievements[name]) return;
 
@@ -1185,7 +1207,6 @@ async function loadRanking() {
 // 🌐 みんなの問題（クイズ共有・共有解除機能）
 // ==========================================
 
-// 自作クイズを「みんなの問題」へ共有する
 async function shareQuizToPublic(quizId, event) {
     if (event) event.stopPropagation();
 
@@ -1215,7 +1236,7 @@ async function shareQuizToPublic(quizId, event) {
             a: quiz.a,
             explanation: quiz.explanation || "",
             authorName: playerName || "名無し",
-            authorId: myPlayerId, // 投稿者の識別用ID
+            authorId: myPlayerId,
             createdAt: new Date().toISOString()
         });
 
@@ -1227,7 +1248,6 @@ async function shareQuizToPublic(quizId, event) {
     }
 }
 
-// 共有された問題を削除（共有解除・非共有にする）
 async function unshareQuizFromPublic(docId, event) {
     if (event) event.stopPropagation();
 
@@ -1246,7 +1266,6 @@ async function unshareQuizFromPublic(docId, event) {
     }
 }
 
-// 共有された「みんなの問題」を取得して表示する
 async function loadPublicQuizzes() {
     const displayElem = document.getElementById('publicQuizList');
     if (!displayElem) return;
@@ -1271,7 +1290,7 @@ async function loadPublicQuizzes() {
         displayElem.innerHTML = "";
         const myPlayerId = getOrCreatePlayerId();
 
-querySnapshot.forEach((docSnap) => {
+        querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             const docId = docSnap.id;
             const quizDataStr = encodeURIComponent(JSON.stringify(data));
@@ -1280,7 +1299,6 @@ querySnapshot.forEach((docSnap) => {
             const div = document.createElement('div');
             div.style.cssText = 'background:rgba(255,255,255,0.05); padding:8px 10px; margin-bottom:6px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.1); min-width:0;';
             
-            // ボタン領域に flex-shrink:0 と white-space:nowrap を追加
             const actionButtonHtml = isMyPost
                 ? `<button onclick="unshareQuizFromPublic('${docId}', event)" style="font-size:0.7rem; background:#ef4444; color:#fff; font-weight:bold; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; flex-shrink:0; white-space:nowrap;">共有解除</button>`
                 : `<button onclick="importPublicQuiz('${quizDataStr}', event)" style="font-size:0.7rem; background:var(--green-neon, #4ade80); color:#000; font-weight:bold; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; flex-shrink:0; white-space:nowrap;">マイ問題に追加</button>`;
@@ -1300,14 +1318,12 @@ querySnapshot.forEach((docSnap) => {
     }
 }
 
-// 共有された問題を自分のクイズリストに取り込む
 function importPublicQuiz(quizDataStr, event) {
     if (event) event.stopPropagation();
 
     try {
         const data = JSON.parse(decodeURIComponent(quizDataStr));
 
-        // 重複チェック
         const isExist = activeQuizList.some(q => q.q === data.q && q.a === data.a);
         if (isExist) {
             alert("この問題は既にあなたの問題リストに入っています！");
