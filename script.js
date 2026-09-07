@@ -7,7 +7,8 @@
 // ==========================================
 let totalExp = 0;
 let currentLevel = 1;
-let endTime = 0;
+let timerStartTime = 0;
+let targetSeconds = 1500; // 目標時間: 25分 (1500秒)
 let timerInterval = null;
 let currentView = 'home';
 let nigateLogs = [];
@@ -236,7 +237,7 @@ function showView(viewName) {
     currentView = viewName;
 
     const cards = {
-        guide: document.getElementById('card-guide'), // 👈 追加
+        guide: document.getElementById('card-guide'),
         timer: document.getElementById('card-timer'),
         weakness: document.getElementById('card-weakness'),
         review: document.getElementById('card-review'),
@@ -250,8 +251,7 @@ function showView(viewName) {
         for (const key in cards) {
             if (!cards[key]) continue;
             
-            // ホーム画面で非表示にするカードを指定
-            if (key === 'settings' || key === 'ranking' || key === 'guide') { // 👈 'guide' を追加
+            if (key === 'settings' || key === 'ranking' || key === 'guide') {
                 cards[key].classList.add('hidden');
             } else {
                 cards[key].classList.remove('hidden');
@@ -320,17 +320,17 @@ function updateSidebarActive(viewName) {
 }
 
 // ==========================================
-// ⏱️ タイマー機能 (スリープ自動補正対応)
+// ⏱️ タイマー機能 (00:00からカウントアップ方式)
 // ==========================================
 function startTimer(event, seconds = 1500) { // デフォルト25分 (1500秒)
     if (event) event.stopPropagation();
     if (timerInterval) return;
 
+    targetSeconds = seconds;
     unlockAchievement('最初の一歩', 'badge1');
 
-    endTime = Date.now() + seconds * 1000;
+    timerStartTime = Date.now();
 
-    // スリープ復帰を検知するイベントを設定
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -358,21 +358,14 @@ function stopTimer(event) {
 }
 
 function updateTimer() {
-    const now = Date.now();
-    const remainingMs = endTime - now;
-    const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+const hours = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+const min = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+const sec = String(elapsedSec % 60).padStart(2, '0');
 
-    const min = String(Math.floor(remainingSec / 60)).padStart(2, '0');
-    const sec = String(remainingSec % 60).padStart(2, '0');
-
-    const display = document.getElementById('timerDisplay');
-    if (display) display.innerText = `${min}:${sec}`;
-
-    if (remainingMs <= 0) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        onTimerEnd();
-    }
+// 1時間以上の場合は HH:MM:SS、それ未満は MM:SS
+display.innerText = elapsedSec >= 3600 
+    ? `${hours}:${min}:${sec}` 
+    : `${min}:${sec}`;
 }
 
 function handleVisibilityChange() {
@@ -382,7 +375,9 @@ function handleVisibilityChange() {
 }
 
 function onTimerEnd() {
-    unlockAchievement('⏱️ 集中モード', 'badge5');
+    if (targetSeconds >= 1800) {
+        unlockAchievement('⏱️ 集中モード', 'badge5');
+    }
 
     const todayStr = getDateKeys().daily;
     if (lastStudyDate && lastStudyDate !== todayStr) {
@@ -404,7 +399,7 @@ function onTimerEnd() {
     }
     lastStudyDate = todayStr;
 
-    const earnedExp = 100; // タイマー完了時獲得XP
+    const earnedExp = 100;
     addExpWithPeriod(earnedExp);
 
     const startBtn = document.getElementById('startBtn');
