@@ -772,8 +772,9 @@ function renderQuizManageList() {
                 </div>
               `;
 
+        // 問題文テキストの幅制御（flex:1; min-width:0; に変更）
         div.innerHTML = `
-            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:65%;">[${q.genre || '国語'}] ${q.q}</span>
+            <span style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;">[${q.genre || '国語'}] ${q.q}</span>
             ${actionHtml}
         `;
         container.appendChild(div);
@@ -1270,23 +1271,23 @@ async function loadPublicQuizzes() {
         displayElem.innerHTML = "";
         const myPlayerId = getOrCreatePlayerId();
 
-        querySnapshot.forEach((docSnap) => {
+querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
             const docId = docSnap.id;
             const quizDataStr = encodeURIComponent(JSON.stringify(data));
-            const isMyPost = data.authorId === myPlayerId; // 自分の投稿かどうか判定
+            const isMyPost = data.authorId === myPlayerId;
 
             const div = document.createElement('div');
-            div.style.cssText = 'background:rgba(255,255,255,0.05); padding:8px 10px; margin-bottom:6px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.1);';
+            div.style.cssText = 'background:rgba(255,255,255,0.05); padding:8px 10px; margin-bottom:6px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.1); min-width:0;';
             
-            // 自分の投稿であれば「共有解除」ボタンを表示
+            // ボタン領域に flex-shrink:0 と white-space:nowrap を追加
             const actionButtonHtml = isMyPost
-                ? `<button onclick="unshareQuizFromPublic('${docId}', event)" style="font-size:0.7rem; background:#ef4444; color:#fff; font-weight:bold; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">共有解除</button>`
-                : `<button onclick="importPublicQuiz('${quizDataStr}', event)" style="font-size:0.7rem; background:var(--green-neon, #4ade80); color:#000; font-weight:bold; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">マイ問題に追加</button>`;
+                ? `<button onclick="unshareQuizFromPublic('${docId}', event)" style="font-size:0.7rem; background:#ef4444; color:#fff; font-weight:bold; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; flex-shrink:0; white-space:nowrap;">共有解除</button>`
+                : `<button onclick="importPublicQuiz('${quizDataStr}', event)" style="font-size:0.7rem; background:var(--green-neon, #4ade80); color:#000; font-weight:bold; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; flex-shrink:0; white-space:nowrap;">マイ問題に追加</button>`;
 
             div.innerHTML = `
-                <div style="flex:1; margin-right:8px; font-size:0.8rem; overflow:hidden;">
-                    <div style="font-size:0.7rem; color:var(--green-neon, #4ade80);">${data.genre} | 作成者: ${data.authorName}${isMyPost ? ' (あなた)' : ''}</div>
+                <div style="flex:1; min-width:0; margin-right:8px; font-size:0.8rem; overflow:hidden;">
+                    <div style="font-size:0.7rem; color:var(--green-neon, #4ade80); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${data.genre} | 作成者: ${data.authorName}${isMyPost ? ' (あなた)' : ''}</div>
                     <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><strong>Q. ${data.q}</strong></div>
                 </div>
                 ${actionButtonHtml}
