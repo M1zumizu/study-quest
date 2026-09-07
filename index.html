@@ -14,7 +14,7 @@
         </div>
         <div class="menu-title">MENU</div>
         <div class="sidebar-menu">
-            <div class="sidebar-item" id="menu-guide" onclick="showView('guide')">💡 使い方</div> <!-- 👈 追加 -->
+            <div class="sidebar-item" id="menu-guide" onclick="showView('guide')">💡 使い方</div>
             <div class="sidebar-item" id="menu-timer" onclick="showView('timer')">⏱️ タイマー</div>
             <div class="sidebar-item" id="menu-weakness" onclick="showView('weakness')">👾 苦手ノート</div>
             <div class="sidebar-item" id="menu-review" onclick="showView('review')">🔄 復習クイズ</div>
@@ -40,6 +40,33 @@
             </header>
 
             <div class="dashboard-grid">
+
+                <!-- 💡 使い方カード -->
+                <div id="card-guide" class="quest-card guide-card hidden" onclick="handleCardClick('guide')">
+                    <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
+                    <div class="card-header">
+                        <span class="card-icon">💡</span>
+                        <h2>Study Quest の使い方・機能</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="guide-section">
+                            <h3>⏱️ 勉強タイマー</h3>
+                            <p>タイマーを開始して集中学習！カウントダウンが完了すると <strong>+100 XP</strong> を獲得できます。</p>
+                        </div>
+                        <div class="guide-section">
+                            <h3>👾 苦手ノート</h3>
+                            <p>暗記したい問題と解答を登録できます（1件登録で <strong>+10 XP</strong>）。赤塗りの伏字部分をタップして答え合わせができます。</p>
+                        </div>
+                        <div class="guide-section">
+                            <h3>🔄 復習クイズ</h3>
+                            <p>登録した問題やサンプル問題でクイズに挑戦できます（正解で <strong>+20 XP</strong>）。自作クイズの共有や「みんなの問題」から他ユーザーの問題をマイリストに取り込むことも可能です。</p>
+                        </div>
+                        <div class="guide-section">
+                            <h3>🏆 アチーブメント & 📊 ランキング</h3>
+                            <p>特定の条件（連続学習やクイズ正解数など）を達成すると称号バッジが解放されます。設定からランキング参加をONにすると全国のプレイヤーと獲得XPを競えます。</p>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="card-timer" class="quest-card timer-card" onclick="handleCardClick('timer')">
                     <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
@@ -123,19 +150,6 @@
                                 <input type="text" id="customExplanation" class="input-game-mini" placeholder="解説（任意）">
                                 <button type="submit" class="btn-add-mini">追加・保存</button>
                             </form>
-
-                            <!-- 使い方・機能説明 -->
-                            <details class="guide-box" style="margin-top: 10px;">
-                                <summary>💡 このアプリの使い方・機能</summary>
-                                <div class="guide-content">
-                                    <ul>
-                                        <li><strong>クイズを作る:</strong> 好きな問題を作成してマイ問題に保存できます。</li>
-                                        <li><strong>クイズを共有:</strong> 自作クイズの「共有」を押すと「みんなの問題」に公開されます。</li>
-                                        <li><strong>みんなの問題を取り込む:</strong> 「マイ問題に追加」を押すと自分のリストに登録できます。</li>
-                                        <li><strong>共有解除・削除:</strong> 自分が公開した問題はいつでも非公開や削除が可能です。</li>
-                                    </ul>
-                                </div>
-                            </details>
 
                             <!-- 作成済みクイズ一覧 -->
                             <div id="quizManageList" style="margin-top:10px; max-height:150px; overflow-y:auto;"></div>
