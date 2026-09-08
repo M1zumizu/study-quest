@@ -102,28 +102,147 @@ function checkPeriodExpReset() {
 }
 
 // ==========================================
-// 🗓️ 期間別XP（本日・今週・今月）管理機能 (修正版)
+// 🗓️ 期間別XP（本日・今週・今月）管理機能 (完全修復版)
 // ==========================================
 function addExpWithPeriod(amount) {
     checkPeriodExpReset();
 
-    let dExp = parseInt(localStorage.getItem('dailyExp') || '0', 10) + amount;
-    let wExp = parseInt(localStorage.getItem('weeklyExp') || '0', 10) + amount;
-    let mExp = parseInt(localStorage.getItem('monthlyExp') || '0', 10) + amount;
+    // 1. 数値化の徹底（NaNや文字列結合を確実に防止）
+    const addAmount = Number(amount) || 0;
+    
+    let dExp = (parseInt(localStorage.getItem('dailyExp'), 10) || 0) + addAmount;
+    let wExp = (parseInt(localStorage.getItem('weeklyExp'), 10) || 0) + addAmount;
+    let mExp = (parseInt(localStorage.getItem('monthlyExp'), 10) || 0) + addAmount;
 
     localStorage.setItem('dailyExp', dExp.toString());
     localStorage.setItem('weeklyExp', wExp.toString());
     localStorage.setItem('monthlyExp', mExp.toString());
 
-    // 数値として確実に加算
-    totalExp = (parseInt(totalExp, 10) || 0) + amount;
+    // 既存の totalExp が破損している場合は 0 リセットして正常加算
+    totalExp = (Number(totalExp) || 0) + addAmount;
 
     if (totalExp >= 1000) {
         unlockAchievement('💎 積み重ねの証', 'badge10');
     }
 
     checkLevelUp();
+    updateGameDisplay(); // 画面表示を即時更新
     saveData();
+}
+
+// ==========================================
+// ⏱️ タイマー機能 (短時間テスト・途中停止対応版)
+// ==========================================
+function startTimer(event, seconds = 1500) {
+    if (event) event.stopPropagation();
+    if (timerInterval) return;
+
+    targetSeconds = seconds;
+    unlockAchievement('最初の一歩', 'badge1');
+
+    timerStartTime = Date.now();
+
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'inline-block';
+
+    timerInterval = setInterval(updateTimer, 250);
+    updateTimer();
+}
+
+function stopTimer(event) {
+    if (event) event.stopPropagation();
+
+    if (!timerInterval && timerStartTime === 0) return;
+
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
+    
+    // 10秒ごとに1XP（テスト・途中停止でもXP獲得）
+    const earnedExp = Math.floor(elapsedSec / 10);
+
+    timerStartTime = 0;
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+
+    if (earnedExp > 0) {
+        addExpWithPeriod(earnedExp);
+        alert(`タイマーを停止しました！\n経過時間: ${elapsedSec}秒\n獲得: +${earnedExp} XP`);
+    } else {
+        alert(`タイマーを停止しました。（10秒未満のためXP獲得なし）`);
+    }
+}
+
+function updateTimer() {
+    const display = document.getElementById('timerDisplay');
+    if (!display) return;
+
+    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
+
+    const hours = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+    const min = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+    const sec = String(elapsedSec % 60).padStart(2, '0');
+
+    display.innerText = elapsedSec >= 3600 
+        ? `${hours}:${min}:${sec}` 
+        : `${min}:${sec}`;
+
+    if (elapsedSec >= targetSeconds) {
+        onTimerEnd();
+    }
+}
+
+function onTimerEnd() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    if (targetSeconds >= 1800) {
+        unlockAchievement('⏱️ 集中モード', 'badge5');
+    }
+
+    const todayStr = getDateKeys().daily;
+    if (lastStudyDate && lastStudyDate !== todayStr) {
+        const lastDate = new Date(lastStudyDate);
+        const todayDate = new Date(todayStr);
+        const diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+            streakCount++;
+            if (streakCount >= 3) {
+                unlockAchievement('🔥 3日間の冒険', 'badge4');
+            }
+        } else if (diffDays > 1) {
+            unlockAchievement('🌱 再出発', 'badge3');
+            streakCount = 1;
+        }
+    } else if (!lastStudyDate) {
+        streakCount = 1;
+    }
+    lastStudyDate = todayStr;
+
+    addExpWithPeriod(100);
+
+    timerStartTime = 0;
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+
+    alert("目標時間に達しました！ (+100 XP)");
 }
 
 // ==========================================
