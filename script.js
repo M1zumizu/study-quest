@@ -680,7 +680,10 @@ function submitQuizAnswer(event) {
     if (userAnswer === "") return;
 
     const currentQuiz = list[currentQuizIndex];
-    const correctAnswer = normalizeAnswer(currentQuiz.a);
+    
+    // 💡 解答（currentQuiz.a）から {} を自動除去して正解判定を行う
+    const cleanAnswer = (currentQuiz.a || '').replace(/[{}]/g, '');
+    const correctAnswer = normalizeAnswer(cleanAnswer);
 
     answerInput.disabled = true;
     if (submitBtn) submitBtn.disabled = true;
@@ -702,9 +705,10 @@ function submitQuizAnswer(event) {
         addExpWithPeriod(20);
     } else {
         resultDisplay.style.color = "var(--pink-neon)";
-        resultDisplay.innerText = `❌ 不正解... 正解: 「${currentQuiz.a}」`;
+        // 表示時の正解テキストからも {} を綺麗に消して表示
+        resultDisplay.innerText = `❌ 不正解... 正解: 「${cleanAnswer}」`;
         lastFailedQuizId = currentQuiz.id;
-        insertWeaknessToList(`${currentQuiz.q} | ${currentQuiz.a}`, currentQuiz.genre || "国語");
+        insertWeaknessToList(`${currentQuiz.q} | ${cleanAnswer}`, currentQuiz.genre || "国語");
     }
 
     if (currentQuiz.explanation) {
