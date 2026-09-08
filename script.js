@@ -10,6 +10,7 @@ let currentLevel = 1;
 let timerStartTime = 0;
 let targetSeconds = 1500; // 目標時間: 25分 (1500秒)
 let timerInterval = null;
+let lastAwardedSec = 0;
 let currentView = 'home';
 let nigateLogs = [];
 let currentRankingType = 'daily';
@@ -126,7 +127,7 @@ function addExpWithPeriod(amount) {
 }
 
 // ==========================================
-// ⏱️ タイマー機能 (統合・修復版)
+// ⏱️ タイマー機能 (1秒ごと5XP加算版)
 // ==========================================
 function startTimer(event, seconds = 1500) {
     if (event) event.stopPropagation();
@@ -136,6 +137,7 @@ function startTimer(event, seconds = 1500) {
     unlockAchievement('最初の一歩', 'badge1');
 
     timerStartTime = Date.now();
+    lastAwardedSec = 0; // ✨ カウントを初期化
 
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -147,6 +149,95 @@ function startTimer(event, seconds = 1500) {
 
     timerInterval = setInterval(updateTimer, 250);
     updateTimer();
+}
+
+function stopTimer(event) {
+    if (event) event.stopPropagation();
+
+    if (!timerInterval && timerStartTime === 0) return;
+
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
+    timerStartTime = 0;
+    lastAwardedSec = 0;
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+
+    alert(`タイマーを停止しました！\n経過時間: ${elapsedSec}秒`);
+}
+
+function updateTimer() {
+    const display = document.getElementById('timerDisplay');
+    if (!display) return;
+
+    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
+
+    // ✨ 1秒経過するごとに 5XP を加算（バックグラウンド復帰時の複数秒一括加算にも対応）
+    if (elapsedSec > lastAwardedSec) {
+        const diffSec = elapsedSec - lastAwardedSec;
+        addExpWithPeriod(diffSec * 5); 
+        lastAwardedSec = elapsedSec;
+    }
+
+    const hours = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+    const min = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+    const sec = String(elapsedSec % 60).padStart(2, '0');
+
+    display.innerText = elapsedSec >= 3600 
+        ? `${hours}:${min}:${sec}` 
+        : `${min}:${sec}`;
+
+    if (elapsedSec >= targetSeconds) {
+        onTimerEnd();
+    }
+}
+
+function onTimerEnd() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    if (targetSeconds >= 1800) {
+        unlockAchievement('⏱️ 集中モード', 'badge5');
+    }
+
+    const todayStr = getDateKeys().daily;
+    if (lastStudyDate && lastStudyDate !== todayStr) {
+        const lastDate = new Date(lastStudyDate);
+        const todayDate = new Date(todayStr);
+        const diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+            streakCount++;
+            if (streakCount >= 3) {
+                unlockAchievement('🔥 3日間の冒険', 'badge4');
+            }
+        } else if (diffDays > 1) {
+            unlockAchievement('🌱 再出発', 'badge3');
+            streakCount = 1;
+        }
+    } else if (!lastStudyDate) {
+        streakCount = 1;
+    }
+    lastStudyDate = todayStr;
+
+    timerStartTime = 0;
+    lastAwardedSec = 0;
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+
+    alert("目標時間に達しました！お疲れ様でした！");
 }
 
 function stopTimer(event) {
