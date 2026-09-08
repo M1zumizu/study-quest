@@ -101,13 +101,9 @@ function checkPeriodExpReset() {
     localStorage.setItem('lastDateKeys', JSON.stringify(keys));
 }
 
-// ==========================================
-// 🗓️ 期間別XP（本日・今週・今月）管理機能 (完全修復版)
-// ==========================================
 function addExpWithPeriod(amount) {
     checkPeriodExpReset();
 
-    // 1. 数値化の徹底（NaNや文字列結合を確実に防止）
     const addAmount = Number(amount) || 0;
     
     let dExp = (parseInt(localStorage.getItem('dailyExp'), 10) || 0) + addAmount;
@@ -118,7 +114,6 @@ function addExpWithPeriod(amount) {
     localStorage.setItem('weeklyExp', wExp.toString());
     localStorage.setItem('monthlyExp', mExp.toString());
 
-    // 既存の totalExp が破損している場合は 0 リセットして正常加算
     totalExp = (Number(totalExp) || 0) + addAmount;
 
     if (totalExp >= 1000) {
@@ -126,12 +121,12 @@ function addExpWithPeriod(amount) {
     }
 
     checkLevelUp();
-    updateGameDisplay(); // 画面表示を即時更新
+    updateGameDisplay();
     saveData();
 }
 
 // ==========================================
-// ⏱️ タイマー機能 (短時間テスト・途中停止対応版)
+// ⏱️ タイマー機能 (統合・修復版)
 // ==========================================
 function startTimer(event, seconds = 1500) {
     if (event) event.stopPropagation();
@@ -165,8 +160,7 @@ function stopTimer(event) {
     }
 
     const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
-    
-    // 10秒ごとに1XP（テスト・途中停止でもXP獲得）
+    // 途中停止時：10秒につき1XP
     const earnedExp = Math.floor(elapsedSec / 10);
 
     timerStartTime = 0;
@@ -178,7 +172,7 @@ function stopTimer(event) {
 
     if (earnedExp > 0) {
         addExpWithPeriod(earnedExp);
-        alert(`タイマーを停止しました！\n経過時間: ${elapsedSec}秒\n獲得: +${earnedExp} XP`);
+        alert(`タイマーを停止しました！\n経過時間: ${elapsedSec}秒\n獲得XP: +${earnedExp} XP`);
     } else {
         alert(`タイマーを停止しました。（10秒未満のためXP獲得なし）`);
     }
@@ -200,6 +194,12 @@ function updateTimer() {
 
     if (elapsedSec >= targetSeconds) {
         onTimerEnd();
+    }
+}
+
+function handleVisibilityChange() {
+    if (!document.hidden && timerInterval) {
+        updateTimer();
     }
 }
 
@@ -242,101 +242,34 @@ function onTimerEnd() {
     if (startBtn) startBtn.style.display = 'inline-block';
     if (stopBtn) stopBtn.style.display = 'none';
 
-    alert("目標時間に達しました！ (+100 XP)");
+    alert("目標時間に達しました！お疲れ様でした！ (+100 XP)");
 }
 
-// ==========================================
-// ⏱️ タイマー機能 (修正版)
-// ==========================================
-function stopTimer(event) {
-    if (event) event.stopPropagation();
-
-    if (!timerInterval && timerStartTime === 0) return;
-
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+function checkLevelUp() {
+    while (totalExp >= currentLevel * 100) {
+        currentLevel++;
     }
-
-    // 途中で停止した場合も経過時間に応じてXPを獲得（1分につき4XP）
-    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
-    const earnedExp = Math.floor((elapsedSec / 60) * 4);
-
-    timerStartTime = 0;
-
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    if (startBtn) startBtn.style.display = 'inline-block';
-    if (stopBtn) stopBtn.style.display = 'none';
-
-    if (earnedExp > 0) {
-        addExpWithPeriod(earnedExp);
-        alert(`タイマーを停止しました。\n学習時間: ${Math.floor(elapsedSec / 60)}分\n獲得XP: +${earnedExp} XP`);
-    }
+    updateGameDisplay();
 }
 
-function updateTimer() {
-    const display = document.getElementById('timerDisplay');
-    if (!display) return;
+function updateGameDisplay() {
+    const levelDisplay = document.getElementById('levelDisplay');
+    const expText = document.getElementById('expText');
+    const expFill = document.getElementById('expFill');
 
-    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
+    const nextThreshold = currentLevel * 100;
 
-    const hours = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
-    const min = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
-    const sec = String(elapsedSec % 60).padStart(2, '0');
+    if (levelDisplay) levelDisplay.innerText = "Lv. " + currentLevel;
+    if (expText) expText.innerText = `${totalExp} / ${nextThreshold} XP`;
 
-    display.innerText = elapsedSec >= 3600 
-        ? `${hours}:${min}:${sec}` 
-        : `${min}:${sec}`;
-
-    // 目標時間に達したら終了処理を実行
-    if (elapsedSec >= targetSeconds) {
-        finishTimer();
+    if (expFill) {
+        const previousThreshold = (currentLevel - 1) * 100;
+        const neededExp = nextThreshold - previousThreshold;
+        const currentExpInLevel = totalExp - previousThreshold;
+        let progress = (currentExpInLevel / neededExp) * 100;
+        progress = Math.max(0, Math.min(100, progress));
+        expFill.style.width = progress + "%";
     }
-}
-
-function finishTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
-
-    if (targetSeconds >= 1800) {
-        unlockAchievement('⏱️ 集中モード', 'badge5');
-    }
-
-    const todayStr = getDateKeys().daily;
-    if (lastStudyDate && lastStudyDate !== todayStr) {
-        const lastDate = new Date(lastStudyDate);
-        const todayDate = new Date(todayStr);
-        const diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 1) {
-            streakCount++;
-            if (streakCount >= 3) {
-                unlockAchievement('🔥 3日間の冒険', 'badge4');
-            }
-        } else if (diffDays > 1) {
-            unlockAchievement('🌱 再出発', 'badge3');
-            streakCount = 1;
-        }
-    } else if (!lastStudyDate) {
-        streakCount = 1;
-    }
-    lastStudyDate = todayStr;
-
-    // 目標時間達成時の100XPを加算
-    const earnedExp = 100;
-    addExpWithPeriod(earnedExp);
-
-    timerStartTime = 0;
-
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    if (startBtn) startBtn.style.display = 'inline-block';
-    if (stopBtn) stopBtn.style.display = 'none';
-
-    alert(`目標時間に達しました！お疲れ様でした！\n獲得XP: +${earnedExp} XP`);
 }
 
 // ==========================================
@@ -533,138 +466,6 @@ function updateSidebarActive(viewName) {
     const activeItem = document.getElementById(`menu-${viewName}`);
     if (activeItem) {
         activeItem.classList.add('active');
-    }
-}
-
-// ==========================================
-// ⏱️ タイマー機能 (00:00からカウントアップ方式)
-// ==========================================
-function startTimer(event, seconds = 1500) { // デフォルト25分 (1500秒)
-    if (event) event.stopPropagation();
-    if (timerInterval) return;
-
-    targetSeconds = seconds;
-    unlockAchievement('最初の一歩', 'badge1');
-
-    timerStartTime = Date.now();
-
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    if (startBtn) startBtn.style.display = 'none';
-    if (stopBtn) stopBtn.style.display = 'inline-block';
-
-    timerInterval = setInterval(updateTimer, 250);
-    updateTimer();
-}
-
-function stopTimer(event) {
-    if (event) event.stopPropagation();
-
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
-
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    if (startBtn) startBtn.style.display = 'inline-block';
-    if (stopBtn) stopBtn.style.display = 'none';
-}
-
-function updateTimer() {
-    // 1. 表示用のHTML要素を取得（※HTML側のID名が異なる場合は 'timerDisplay' を書き換えてください）
-    const display = document.getElementById('timerDisplay');
-    if (!display) return;
-
-    // 2. 現在時刻と開始時刻から「経過秒数」を計算
-    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
-
-    // 3. 時間・分・秒のフォーマット整形
-    const hours = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
-    const min = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
-    const sec = String(elapsedSec % 60).padStart(2, '0');
-
-    // 4. 1時間以上の場合は HH:MM:SS、それ未満は MM:SS で表示
-    display.innerText = elapsedSec >= 3600 
-        ? `${hours}:${min}:${sec}` 
-        : `${min}:${sec}`;
-
-    // 5. 目標時間（25分/60分など）に達したらタイマーを停止して終了処理を実行
-    if (elapsedSec >= targetSeconds) {
-        stopTimer();
-        onTimerEnd();
-    }
-}
-
-function handleVisibilityChange() {
-    if (!document.hidden && timerInterval) {
-        updateTimer();
-    }
-}
-
-function onTimerEnd() {
-    if (targetSeconds >= 1800) {
-        unlockAchievement('⏱️ 集中モード', 'badge5');
-    }
-
-    const todayStr = getDateKeys().daily;
-    if (lastStudyDate && lastStudyDate !== todayStr) {
-        const lastDate = new Date(lastStudyDate);
-        const todayDate = new Date(todayStr);
-        const diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 1) {
-            streakCount++;
-            if (streakCount >= 3) {
-                unlockAchievement('🔥 3日間の冒険', 'badge4');
-            }
-        } else if (diffDays > 1) {
-            unlockAchievement('🌱 再出発', 'badge3');
-            streakCount = 1;
-        }
-    } else if (!lastStudyDate) {
-        streakCount = 1;
-    }
-    lastStudyDate = todayStr;
-
-    const earnedExp = 100;
-    addExpWithPeriod(earnedExp);
-
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    if (startBtn) startBtn.style.display = 'inline-block';
-    if (stopBtn) stopBtn.style.display = 'none';
-
-    alert("時間になりました！お疲れ様でした！");
-}
-
-function checkLevelUp() {
-    while (totalExp >= currentLevel * 100) {
-        currentLevel++;
-    }
-    updateGameDisplay();
-}
-
-function updateGameDisplay() {
-    const levelDisplay = document.getElementById('levelDisplay');
-    const expText = document.getElementById('expText');
-    const expFill = document.getElementById('expFill');
-
-    const nextThreshold = currentLevel * 100;
-
-    if (levelDisplay) levelDisplay.innerText = "Lv. " + currentLevel;
-    if (expText) expText.innerText = `${totalExp} / ${nextThreshold} XP`;
-
-    if (expFill) {
-        const previousThreshold = (currentLevel - 1) * 100;
-        const neededExp = nextThreshold - previousThreshold;
-        const currentExpInLevel = totalExp - previousThreshold;
-        let progress = (currentExpInLevel / neededExp) * 100;
-        progress = Math.max(0, Math.min(100, progress));
-        expFill.style.width = progress + "%";
     }
 }
 
@@ -1438,7 +1239,6 @@ async function loadRanking() {
 // ==========================================
 // 🌐 みんなの問題（クイズ共有・共有解除機能）
 // ==========================================
-
 async function shareQuizToPublic(quizId, event) {
     if (event) event.stopPropagation();
 
