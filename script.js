@@ -162,6 +162,8 @@ function stopTimer(event) {
     }
 
     const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
+    
+    // 変数のリセット
     timerStartTime = 0;
     lastAwardedSec = 0;
 
@@ -170,6 +172,7 @@ function stopTimer(event) {
     if (startBtn) startBtn.style.display = 'inline-block';
     if (stopBtn) stopBtn.style.display = 'none';
 
+    // 10秒未満でも獲得済みのXP（1秒につき5XP）は保持されたまま停止します
     alert(`タイマーを停止しました！\n経過時間: ${elapsedSec}秒`);
 }
 
