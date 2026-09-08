@@ -358,14 +358,28 @@ function stopTimer(event) {
 }
 
 function updateTimer() {
-const hours = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
-const min = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
-const sec = String(elapsedSec % 60).padStart(2, '0');
+    // 1. 表示用のHTML要素を取得（※HTML側のID名が異なる場合は 'timerDisplay' を書き換えてください）
+    const display = document.getElementById('timerDisplay');
+    if (!display) return;
 
-// 1時間以上の場合は HH:MM:SS、それ未満は MM:SS
-display.innerText = elapsedSec >= 3600 
-    ? `${hours}:${min}:${sec}` 
-    : `${min}:${sec}`;
+    // 2. 現在時刻と開始時刻から「経過秒数」を計算
+    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
+
+    // 3. 時間・分・秒のフォーマット整形
+    const hours = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+    const min = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+    const sec = String(elapsedSec % 60).padStart(2, '0');
+
+    // 4. 1時間以上の場合は HH:MM:SS、それ未満は MM:SS で表示
+    display.innerText = elapsedSec >= 3600 
+        ? `${hours}:${min}:${sec}` 
+        : `${min}:${sec}`;
+
+    // 5. 目標時間（25分/60分など）に達したらタイマーを停止して終了処理を実行
+    if (elapsedSec >= targetSeconds) {
+        stopTimer();
+        onTimerEnd();
+    }
 }
 
 function handleVisibilityChange() {
