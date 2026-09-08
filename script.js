@@ -101,18 +101,22 @@ function checkPeriodExpReset() {
     localStorage.setItem('lastDateKeys', JSON.stringify(keys));
 }
 
+// ==========================================
+// 🗓️ 期間別XP（本日・今週・今月）管理機能 (修正版)
+// ==========================================
 function addExpWithPeriod(amount) {
     checkPeriodExpReset();
 
-    let dExp = parseInt(localStorage.getItem('dailyExp') || '0') + amount;
-    let wExp = parseInt(localStorage.getItem('weeklyExp') || '0') + amount;
-    let mExp = parseInt(localStorage.getItem('monthlyExp') || '0') + amount;
+    let dExp = parseInt(localStorage.getItem('dailyExp') || '0', 10) + amount;
+    let wExp = parseInt(localStorage.getItem('weeklyExp') || '0', 10) + amount;
+    let mExp = parseInt(localStorage.getItem('monthlyExp') || '0', 10) + amount;
 
     localStorage.setItem('dailyExp', dExp.toString());
     localStorage.setItem('weeklyExp', wExp.toString());
     localStorage.setItem('monthlyExp', mExp.toString());
 
-    totalExp += amount;
+    // 数値として確実に加算
+    totalExp = (parseInt(totalExp, 10) || 0) + amount;
 
     if (totalExp >= 1000) {
         unlockAchievement('💎 積み重ねの証', 'badge10');
@@ -120,6 +124,100 @@ function addExpWithPeriod(amount) {
 
     checkLevelUp();
     saveData();
+}
+
+// ==========================================
+// ⏱️ タイマー機能 (修正版)
+// ==========================================
+function stopTimer(event) {
+    if (event) event.stopPropagation();
+
+    if (!timerInterval && timerStartTime === 0) return;
+
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    // 途中で停止した場合も経過時間に応じてXPを獲得（1分につき4XP）
+    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
+    const earnedExp = Math.floor((elapsedSec / 60) * 4);
+
+    timerStartTime = 0;
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+
+    if (earnedExp > 0) {
+        addExpWithPeriod(earnedExp);
+        alert(`タイマーを停止しました。\n学習時間: ${Math.floor(elapsedSec / 60)}分\n獲得XP: +${earnedExp} XP`);
+    }
+}
+
+function updateTimer() {
+    const display = document.getElementById('timerDisplay');
+    if (!display) return;
+
+    const elapsedSec = Math.floor((Date.now() - timerStartTime) / 1000);
+
+    const hours = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+    const min = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+    const sec = String(elapsedSec % 60).padStart(2, '0');
+
+    display.innerText = elapsedSec >= 3600 
+        ? `${hours}:${min}:${sec}` 
+        : `${min}:${sec}`;
+
+    // 目標時間に達したら終了処理を実行
+    if (elapsedSec >= targetSeconds) {
+        finishTimer();
+    }
+}
+
+function finishTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    if (targetSeconds >= 1800) {
+        unlockAchievement('⏱️ 集中モード', 'badge5');
+    }
+
+    const todayStr = getDateKeys().daily;
+    if (lastStudyDate && lastStudyDate !== todayStr) {
+        const lastDate = new Date(lastStudyDate);
+        const todayDate = new Date(todayStr);
+        const diffDays = Math.round((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+            streakCount++;
+            if (streakCount >= 3) {
+                unlockAchievement('🔥 3日間の冒険', 'badge4');
+            }
+        } else if (diffDays > 1) {
+            unlockAchievement('🌱 再出発', 'badge3');
+            streakCount = 1;
+        }
+    } else if (!lastStudyDate) {
+        streakCount = 1;
+    }
+    lastStudyDate = todayStr;
+
+    // 目標時間達成時の100XPを加算
+    const earnedExp = 100;
+    addExpWithPeriod(earnedExp);
+
+    timerStartTime = 0;
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+
+    alert(`目標時間に達しました！お疲れ様でした！\n獲得XP: +${earnedExp} XP`);
 }
 
 // ==========================================
