@@ -152,15 +152,12 @@ function stopTimer(event) {
         timerInterval = null;
     }
 
-    // 獲得XPの計算 (1秒につき5XP)
     const earnedExp = seconds * 5;
 
-    // 30分（1800秒）以上学習で実績チェック
     if (seconds >= 1800) {
         unlockAchievement('⏱️ 集中モード', 'badge5');
     }
 
-    // 連続学習日数の記録
     const todayStr = getDateKeys().daily;
     if (lastStudyDate && lastStudyDate !== todayStr) {
         const lastDate = new Date(lastStudyDate);
@@ -181,7 +178,6 @@ function stopTimer(event) {
     }
     lastStudyDate = todayStr;
 
-    // XP付与とアラート
     if (earnedExp > 0) {
         addExpWithPeriod(earnedExp);
         alert(`タイマーを停止しました！\n経過時間: ${seconds}秒\n獲得XP: +${earnedExp} XP`);
@@ -195,7 +191,6 @@ function stopTimer(event) {
     if (startBtn) startBtn.style.display = 'inline-block';
     if (stopBtn) stopBtn.style.display = 'none';
 
-    // カウントリセット
     seconds = 0;
     updateTimerDisplay();
 }
@@ -642,7 +637,15 @@ function loadQuizQuestion() {
     if (currentQuizIndex >= list.length) currentQuizIndex = 0;
 
     const currentQuiz = list[currentQuizIndex];
-    if (qText) qText.innerText = `[${currentQuiz.genre || '国語'}] ${currentQuiz.q}`;
+    
+    // 💡 解答に {} が含まれている場合、{} の中身を ___ に置き換えて伏字表記（___/___ など）を表示する
+    let displayQuestion = `[${currentQuiz.genre || '国語'}] ${currentQuiz.q}`;
+    if (currentQuiz.a && /\{[^}]+\}/.test(currentQuiz.a)) {
+        const maskedAnswer = currentQuiz.a.replace(/\{[^}]+\}/g, '___');
+        displayQuestion += `\n【穴埋め】 ${maskedAnswer}`;
+    }
+
+    if (qText) qText.innerText = displayQuestion;
     if (rText) rText.innerText = "";
     if (eText) eText.style.display = "none";
 
