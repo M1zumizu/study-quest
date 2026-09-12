@@ -137,23 +137,28 @@
         </div>
 
         <div class="quiz-play-screen">
-            <p id="quizQuestionText" class="quiz-question">クイズを読み込み中...</p>
-            
-            <!-- 記述入力用エリア -->
-            <div id="textQuizArea" style="display:flex; gap:8px; margin-top:10px;">
-                <input type="text" id="userQuizAnswer" class="input-game" style="margin-bottom:0;" placeholder="回答を入力" autocomplete="off">
-                <button id="submitAnswerBtn" class="btn-game btn-start" style="flex:0 0 80px;" onclick="submitQuizAnswer(event)">回答</button>
-            </div>
+    <p id="quizQuestionText" class="quiz-question">クイズを読み込み中...</p>
+    
+    <!-- 記述入力用エリア -->
+    <div id="textQuizArea" style="display:flex; gap:8px; margin-top:10px;">
+        <input type="text" id="userQuizAnswer" class="input-game" style="margin-bottom:0;" placeholder="回答を入力" autocomplete="off">
+        <button id="submitAnswerBtn" class="btn-game btn-start" style="flex:0 0 80px;" onclick="submitQuizAnswer(event)">回答</button>
+    </div>
 
-            <!-- ◯✕回答用エリア（初期状態は非表示） -->
-            <div id="marubatsuQuizArea" style="display:none; gap:12px; margin-top:10px; justify-content:center;">
-                <button id="mbBtnCircle" class="btn-game btn-start" style="flex:1; font-size:1.2rem; background:#4ade80; color:#000;" onclick="submitMarubatsuAnswer(true, event)">⭕ 正解</button>
-                <button id="mbBtnCross" class="btn-game btn-stop" style="flex:1; font-size:1.2rem; background:#ef4444;" onclick="submitMarubatsuAnswer(false, event)">❌ 不正解</button>
-            </div>
-
-            <p id="quizResultText" class="quiz-answer"></p>
-            <p id="quizExplanationText" style="font-size:0.85rem; color:var(--text-sub); margin-top:6px; display:none;"></p>
+    <!-- ◯✕回答用エリア -->
+    <div id="marubatsuQuizArea" style="display:none; flex-direction:column; gap:10px; margin-top:10px;">
+        <!-- 💡 追加：答え表示ボタン -->
+        <button id="revealAnswerBtn" class="btn-game btn-show-answer" style="width:100%;" onclick="revealQuizAnswer(event)">答えを表示する</button>
+        
+        <div style="display:flex; gap:12px; justify-content:center;">
+            <button id="mbBtnCircle" class="btn-game btn-start" style="flex:1; font-size:1.2rem; background:#4ade80; color:#000;" onclick="submitMarubatsuAnswer(true, event)">⭕ 正解</button>
+            <button id="mbBtnCross" class="btn-game btn-stop" style="flex:1; font-size:1.2rem; background:#ef4444;" onclick="submitMarubatsuAnswer(false, event)">❌ 不正解</button>
         </div>
+    </div>
+
+    <p id="quizResultText" class="quiz-answer"></p>
+    <p id="quizExplanationText" style="font-size:0.85rem; color:var(--text-sub); margin-top:6px; display:none;"></p>
+</div>
 
         <button class="btn-mini" style="margin-top:10px;" onclick="toggleQuizForm(event)">＋ 自作クイズの管理・追加</button>
         
