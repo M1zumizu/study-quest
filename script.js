@@ -57,6 +57,8 @@ let activeQuizList = [...defaultQuizList];
 let currentQuizIndex = 0;
 let currentQuizFilter = "すべて";
 let currentQuizMode = 'text'; // 'text' または 'marubatsu'
+let quizOrderMode = 'sequential'; // 'sequential' (順番) または 'random' (ランダム)
+let isAnswerRevealed = false;
 
 // ==========================================
 // 🆔 プレイヤーID管理（端末ごとに固定）
@@ -615,7 +617,7 @@ function renderWeaknessList() {
 function switchQuizMode() {
     const select = document.getElementById('quizModeSelect');
     if (!select) return;
-    
+
     currentQuizMode = select.value;
     const textArea = document.getElementById('textQuizArea');
     const marubatsuArea = document.getElementById('marubatsuQuizArea');
@@ -627,8 +629,16 @@ function switchQuizMode() {
         if (textArea) textArea.style.display = 'flex';
         if (marubatsuArea) marubatsuArea.style.display = 'none';
     }
-    
+
     loadQuizQuestion();
+}
+
+function switchQuizOrderMode() {
+    const select = document.getElementById('quizOrderSelect');
+    if (select) {
+        quizOrderMode = select.value; // 'sequential' または 'random'
+        saveData();
+    }
 }
 
 function filterQuizGenre() {
@@ -640,6 +650,22 @@ function filterQuizGenre() {
 
 function getFilteredQuizList() {
     return activeQuizList.filter(q => currentQuizFilter === "すべて" || (q.genre && q.genre === currentQuizFilter));
+}
+
+function nextQuizIndex(listLength) {
+    if (listLength <= 1) {
+        currentQuizIndex = 0;
+        return;
+    }
+    if (quizOrderMode === 'random') {
+        let newIndex;
+        do {
+            newIndex = Math.floor(Math.random() * listLength);
+        } while (newIndex === currentQuizIndex);
+        currentQuizIndex = newIndex;
+    } else {
+        currentQuizIndex = (currentQuizIndex + 1) % listLength;
+    }
 }
 
 function loadQuizQuestion() {
@@ -669,6 +695,8 @@ function loadQuizQuestion() {
     if (rText) rText.innerText = "";
     if (eText) eText.style.display = "none";
 
+    isAnswerRevealed = false;
+
     // 記述入力状態のリセット
     const answerInput = document.getElementById('userQuizAnswer');
     if (answerInput) {
@@ -679,11 +707,53 @@ function loadQuizQuestion() {
     const submitBtn = document.getElementById('submitAnswerBtn');
     if (submitBtn) submitBtn.disabled = false;
 
-    // ◯✕ボタン状態のリセット
+    // 答え表示ボタンのリセット
+    const revealBtn = document.getElementById('revealAnswerBtn');
+    if (revealBtn) {
+        revealBtn.style.display = 'inline-block';
+        revealBtn.disabled = false;
+    }
+
+    // ◯✕ボタンの状態リセット（答えを見るまでは押せない）
+    const circleBtn = document.getElementById('mbBtnCircle');
+    const crossBtn = document.getElementById('mbBtnCross');
+    if (circleBtn) circleBtn.disabled = true;
+    if (crossBtn) crossBtn.disabled = true;
+}
+
+// 答え表示処理
+function revealQuizAnswer(event) {
+    if (event) event.stopPropagation();
+
+    const list = getFilteredQuizList();
+    const rText = document.getElementById('quizResultText');
+    const eText = document.getElementById('quizExplanationText');
+
+    if (list.length === 0) return;
+
+    const currentQuiz = list[currentQuizIndex];
+    const cleanAnswer = (currentQuiz.a || '').replace(/[{}]/g, '');
+
+    if (rText) {
+        rText.style.color = "var(--text-main, #fff)";
+        rText.innerText = `💡 正解: 「${cleanAnswer}」`;
+    }
+
+    if (currentQuiz.explanation && eText) {
+        eText.innerText = `💡 解説: ${currentQuiz.explanation}`;
+        eText.style.display = "block";
+    }
+
+    // ◯✕ボタンの有効化と答え表示ボタンの非効化
     const circleBtn = document.getElementById('mbBtnCircle');
     const crossBtn = document.getElementById('mbBtnCross');
     if (circleBtn) circleBtn.disabled = false;
     if (crossBtn) crossBtn.disabled = false;
+
+    const revealBtn = document.getElementById('revealAnswerBtn');
+    if (revealBtn) revealBtn.disabled = true;
+
+    isAnswerRevealed = true;
 }
 
 function normalizeAnswer(str) {
@@ -729,7 +799,7 @@ function submitQuizAnswer(event) {
     }
 
     setTimeout(() => {
-        currentQuizIndex = (currentQuizIndex + 1) % list.length;
+        nextQuizIndex(list.length);
         loadQuizQuestion();
     }, 2500);
 }
@@ -744,7 +814,7 @@ function submitMarubatsuAnswer(isCorrect, event) {
     const circleBtn = document.getElementById('mbBtnCircle');
     const crossBtn = document.getElementById('mbBtnCross');
 
-    if (list.length === 0) return;
+    if (list.length === 0 || !isAnswerRevealed) return;
 
     if (circleBtn) circleBtn.disabled = true;
     if (crossBtn) crossBtn.disabled = true;
@@ -764,7 +834,7 @@ function submitMarubatsuAnswer(isCorrect, event) {
     }
 
     setTimeout(() => {
-        currentQuizIndex = (currentQuizIndex + 1) % list.length;
+        nextQuizIndex(list.length);
         loadQuizQuestion();
     }, 2500);
 }
@@ -1003,7 +1073,8 @@ function saveData() {
         quizCorrectCount: quizCorrectCount,
         lastFailedQuizId: lastFailedQuizId,
         lastStudyDate: lastStudyDate,
-        streakCount: streakCount
+        streakCount: streakCount,
+        quizOrderMode: quizOrderMode
     };
 
     try {
@@ -1049,6 +1120,10 @@ function loadData() {
         if (gameState.lastFailedQuizId !== undefined) lastFailedQuizId = gameState.lastFailedQuizId;
         if (gameState.lastStudyDate !== undefined) lastStudyDate = gameState.lastStudyDate;
         if (gameState.streakCount !== undefined) streakCount = gameState.streakCount;
+        if (gameState.quizOrderMode !== undefined) quizOrderMode = gameState.quizOrderMode;
+
+        const orderSelect = document.getElementById('quizOrderSelect');
+        if (orderSelect) orderSelect.value = quizOrderMode;
 
         updateGameDisplay();
         renderWeaknessList();
