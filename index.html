@@ -68,6 +68,7 @@
                     </div>
                 </div>
 
+                <!-- ⏱️ タイマーカード -->
                 <div id="card-timer" class="quest-card timer-card" onclick="handleCardClick('timer')">
                     <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
                     <div class="card-header">
@@ -83,6 +84,7 @@
                     </div>
                 </div>
 
+                <!-- 👾 苦手ノートカード -->
                 <div id="card-weakness" class="quest-card weakness-card" onclick="handleCardClick('weakness')">
                     <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
                     <div class="card-header">
@@ -112,62 +114,77 @@
                     </div>
                 </div>
 
-                <div id="card-review" class="quest-card review-card" onclick="handleCardClick('review')">
-                    <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
-                    <div class="card-header">
-                        <span class="card-icon">🔄</span>
-                        <h2>復習クイズ</h2>
-                    </div>
-                    <div class="card-body">
-                        <div style="margin-bottom:10px; display:flex; gap:6px; align-items:center;">
-                            <span style="font-size:0.8rem; color:var(--text-sub);">ジャンル:</span>
-                            <select id="quizGenreFilter" onchange="filterQuizGenre()" class="input-game-mini" style="width:auto; margin:0;"></select>
-                            <button type="button" class="btn-mini" onclick="promptAddGenre(event)">＋ジャンル</button>
-                            <button type="button" class="btn-mini" onclick="promptManageGenres(event)">✏️編集</button>
-                        </div>
+ <!-- 🔄 復習クイズカード -->
+<div id="card-review" class="quest-card review-card" onclick="handleCardClick('review')">
+    <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
+    <div class="card-header">
+        <span class="card-icon">🔄</span>
+        <h2>復習クイズ</h2>
+    </div>
+    <div class="card-body">
+        <div style="margin-bottom:10px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <!-- 回答形式の切り替えを追加 -->
+            <span style="font-size:0.8rem; color:var(--text-sub);">形式:</span>
+            <select id="quizModeSelect" onchange="switchQuizMode()" class="input-game-mini" style="width:auto; margin:0;">
+                <option value="text">記述入力</option>
+                <option value="marubatsu">◯✕回答</option>
+            </select>
 
-                        <div class="quiz-play-screen">
-                            <p id="quizQuestionText" class="quiz-question">クイズを読み込み中...</p>
-                            <div style="display:flex; gap:8px; margin-top:10px;">
-                                <input type="text" id="userQuizAnswer" class="input-game" style="margin-bottom:0;" placeholder="回答を入力" autocomplete="off">
-                                <button id="submitAnswerBtn" class="btn-game btn-start" style="flex:0 0 80px;" onclick="submitQuizAnswer(event)">回答</button>
-                            </div>
-                            <p id="quizResultText" class="quiz-answer"></p>
-                            <p id="quizExplanationText" style="font-size:0.85rem; color:var(--text-sub); margin-top:6px; display:none;"></p>
-                        </div>
+            <span style="font-size:0.8rem; color:var(--text-sub);">ジャンル:</span>
+            <select id="quizGenreFilter" onchange="filterQuizGenre()" class="input-game-mini" style="width:auto; margin:0;"></select>
+            <button type="button" class="btn-mini" onclick="promptAddGenre(event)">＋ジャンル</button>
+            <button type="button" class="btn-mini" onclick="promptManageGenres(event)">✏️編集</button>
+        </div>
 
-                        <button class="btn-mini" style="margin-top:10px;" onclick="toggleQuizForm(event)">＋ 自作クイズの管理・追加</button>
-                        
-                        <div id="quizFormContainer" class="quiz-creation-form" style="display:none; margin-top:10px;">
-                            <form onsubmit="addCustomQuiz(event)" style="display:flex; flex-direction:column; gap:6px;">
-                                <div style="display:flex; gap:4px;">
-                                    <select id="customGenre" class="input-game-mini" style="flex:1;"></select>
-                                    <button type="button" class="btn-mini" onclick="promptAddGenre(event)">＋ジャンル</button>
-                                    <button type="button" class="btn-mini" onclick="promptManageGenres(event)">✏️編集</button>
-                                </div>
-                                <input type="text" id="customQuestion" class="input-game-mini" placeholder="問題文を入力" required>
-                                <input type="text" id="customAnswer" class="input-game-mini" placeholder="正解を入力" required>
-                                <input type="text" id="customExplanation" class="input-game-mini" placeholder="解説（任意）">
-                                <button type="submit" class="btn-add-mini">追加・保存</button>
-                            </form>
+        <div class="quiz-play-screen">
+            <p id="quizQuestionText" class="quiz-question">クイズを読み込み中...</p>
+            
+            <!-- 記述入力用エリア -->
+            <div id="textQuizArea" style="display:flex; gap:8px; margin-top:10px;">
+                <input type="text" id="userQuizAnswer" class="input-game" style="margin-bottom:0;" placeholder="回答を入力" autocomplete="off">
+                <button id="submitAnswerBtn" class="btn-game btn-start" style="flex:0 0 80px;" onclick="submitQuizAnswer(event)">回答</button>
+            </div>
 
-                            <!-- 作成済みクイズ一覧 -->
-                            <div id="quizManageList" style="margin-top:10px; max-height:150px; overflow-y:auto;"></div>
-                        </div>
+            <!-- ◯✕回答用エリア（初期状態は非表示） -->
+            <div id="marubatsuQuizArea" style="display:none; gap:12px; margin-top:10px; justify-content:center;">
+                <button id="mbBtnCircle" class="btn-game btn-start" style="flex:1; font-size:1.2rem; background:#4ade80; color:#000;" onclick="submitMarubatsuAnswer(true, event)">⭕ 正解</button>
+                <button id="mbBtnCross" class="btn-game btn-stop" style="flex:1; font-size:1.2rem; background:#ef4444;" onclick="submitMarubatsuAnswer(false, event)">❌ 不正解</button>
+            </div>
 
-                        <!-- みんなの問題エリア -->
-                        <div style="margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <span style="font-weight: bold; font-size: 0.9rem;">🌐 みんなの問題</span>
-                                <button onclick="loadPublicQuizzes()" style="font-size:0.75rem; background:none; border:1px solid var(--green-neon, #4ade80); color:var(--green-neon, #4ade80); border-radius:4px; padding:3px 8px; cursor:pointer;">🔄 更新</button>
-                            </div>
-                            <!-- ここに共有された問題が一覧表示されます -->
-                            <div id="publicQuizList"></div>
-                        </div>
+            <p id="quizResultText" class="quiz-answer"></p>
+            <p id="quizExplanationText" style="font-size:0.85rem; color:var(--text-sub); margin-top:6px; display:none;"></p>
+        </div>
 
-                    </div>
+        <button class="btn-mini" style="margin-top:10px;" onclick="toggleQuizForm(event)">＋ 自作クイズの管理・追加</button>
+        
+        <div id="quizFormContainer" class="quiz-creation-form" style="display:none; margin-top:10px;">
+            <form onsubmit="addCustomQuiz(event)" style="display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; gap:4px;">
+                    <select id="customGenre" class="input-game-mini" style="flex:1;"></select>
+                    <button type="button" class="btn-mini" onclick="promptAddGenre(event)">＋ジャンル</button>
+                    <button type="button" class="btn-mini" onclick="promptManageGenres(event)">✏️編集</button>
                 </div>
+                <input type="text" id="customQuestion" class="input-game-mini" placeholder="問題文を入力" required>
+                <input type="text" id="customAnswer" class="input-game-mini" placeholder="正解を入力" required>
+                <input type="text" id="customExplanation" class="input-game-mini" placeholder="解説（任意）">
+                <button type="submit" class="btn-add-mini">追加・保存</button>
+            </form>
 
+            <div id="quizManageList" style="margin-top:10px; max-height:150px; overflow-y:auto;"></div>
+        </div>
+
+        <div style="margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-weight: bold; font-size: 0.9rem;">🌐 みんなの問題</span>
+                <button onclick="loadPublicQuizzes()" style="font-size:0.75rem; background:none; border:1px solid var(--green-neon, #4ade80); color:var(--green-neon, #4ade80); border-radius:4px; padding:3px 8px; cursor:pointer;">🔄 更新</button>
+            </div>
+            <div id="publicQuizList"></div>
+        </div>
+
+    </div>
+</div>
+
+                <!-- 🏆 アチーブメントカード -->
                 <div id="card-achievement" class="quest-card achievement-card" onclick="handleCardClick('achievement')">
                     <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
                     <div class="card-header">
@@ -176,23 +193,11 @@
                     </div>
                     <div class="card-body">
                         <p class="achievement-desc">特定条件クリアで解放！</p>
-                        <div class="achievement-grid">
-                            <div class="badge-item" id="badge1">
-                                <div class="badge-icon">🐣</div>
-                                <div>最初の一歩</div>
-                            </div>
-                            <div class="badge-item" id="badge2">
-                                <div class="badge-icon">🔥</div>
-                                <div>集中マスター</div>
-                            </div>
-                            <div class="badge-item" id="badge3">
-                                <div class="badge-icon">👑</div>
-                                <div>伝説の勇者</div>
-                            </div>
-                        </div>
+                        <div id="achievementList" class="achievement-list-inner" style="margin-top: 12px;"></div>
                     </div>
                 </div>
 
+                <!-- 📊 ランキングカード -->
                 <div id="card-ranking" class="quest-card settings-card hidden" onclick="handleCardClick('ranking')">
                     <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
                     <div class="card-header">
@@ -213,6 +218,7 @@
                     </div>
                 </div>
 
+                <!-- ⚙️ 設定カード -->
                 <div id="card-settings" class="quest-card settings-card hidden" onclick="handleCardClick('settings')">
                     <button class="back-btn" onclick="goBackToHome(event)">← 戻る</button>
                     <div class="card-header">

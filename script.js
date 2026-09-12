@@ -56,6 +56,7 @@ const defaultQuizList = [
 let activeQuizList = [...defaultQuizList];
 let currentQuizIndex = 0;
 let currentQuizFilter = "すべて";
+let currentQuizMode = 'text'; // 'text' または 'marubatsu'
 
 // ==========================================
 // 🆔 プレイヤーID管理（端末ごとに固定）
@@ -402,6 +403,7 @@ function showView(viewName) {
     }
 
     if (viewName === 'review') {
+        loadQuizQuestion();
         loadPublicQuizzes();
     }
 }
@@ -471,7 +473,7 @@ function addWeakness(event) {
     };
     activeQuizList.unshift(newQuiz);
 
-    const earnedExp = 15; 
+    const earnedExp = 10; 
     addExpWithPeriod(earnedExp);
 
     renderWeaknessList();
@@ -610,6 +612,25 @@ function renderWeaknessList() {
 // ==========================================
 // 🔄 復習クイズ機能
 // ==========================================
+function switchQuizMode() {
+    const select = document.getElementById('quizModeSelect');
+    if (!select) return;
+    
+    currentQuizMode = select.value;
+    const textArea = document.getElementById('textQuizArea');
+    const marubatsuArea = document.getElementById('marubatsuQuizArea');
+
+    if (currentQuizMode === 'marubatsu') {
+        if (textArea) textArea.style.display = 'none';
+        if (marubatsuArea) marubatsuArea.style.display = 'flex';
+    } else {
+        if (textArea) textArea.style.display = 'flex';
+        if (marubatsuArea) marubatsuArea.style.display = 'none';
+    }
+    
+    loadQuizQuestion();
+}
+
 function filterQuizGenre() {
     const filterSelect = document.getElementById('quizGenreFilter');
     currentQuizFilter = filterSelect ? filterSelect.value : "すべて";
@@ -638,7 +659,6 @@ function loadQuizQuestion() {
 
     const currentQuiz = list[currentQuizIndex];
     
-    // 💡 解答に {} が含まれている場合、{} の中身を ___ に置き換えて伏字表記（___/___ など）を表示する
     let displayQuestion = `[${currentQuiz.genre || '国語'}] ${currentQuiz.q}`;
     if (currentQuiz.a && /\{[^}]+\}/.test(currentQuiz.a)) {
         const maskedAnswer = currentQuiz.a.replace(/\{[^}]+\}/g, '___');
@@ -649,6 +669,7 @@ function loadQuizQuestion() {
     if (rText) rText.innerText = "";
     if (eText) eText.style.display = "none";
 
+    // 記述入力状態のリセット
     const answerInput = document.getElementById('userQuizAnswer');
     if (answerInput) {
         answerInput.value = "";
@@ -657,6 +678,12 @@ function loadQuizQuestion() {
 
     const submitBtn = document.getElementById('submitAnswerBtn');
     if (submitBtn) submitBtn.disabled = false;
+
+    // ◯✕ボタン状態のリセット
+    const circleBtn = document.getElementById('mbBtnCircle');
+    const crossBtn = document.getElementById('mbBtnCross');
+    if (circleBtn) circleBtn.disabled = false;
+    if (crossBtn) crossBtn.disabled = false;
 }
 
 function normalizeAnswer(str) {
@@ -668,6 +695,7 @@ function normalizeAnswer(str) {
         .replace(/\s+/g, "");
 }
 
+// 記述入力回答処理
 function submitQuizAnswer(event) {
     if (event) event.stopPropagation();
 
@@ -683,8 +711,6 @@ function submitQuizAnswer(event) {
     if (userAnswer === "") return;
 
     const currentQuiz = list[currentQuizIndex];
-    
-    // 💡 解答（currentQuiz.a）から {} を自動除去して正解判定を行う
     const cleanAnswer = (currentQuiz.a || '').replace(/[{}]/g, '');
     const correctAnswer = normalizeAnswer(cleanAnswer);
 
@@ -692,26 +718,9 @@ function submitQuizAnswer(event) {
     if (submitBtn) submitBtn.disabled = true;
 
     if (userAnswer === correctAnswer) {
-        resultDisplay.style.color = "var(--green-neon)";
-        resultDisplay.innerText = "⭕ 正解！ (+20XP)";
-        
-        quizCorrectCount++;
-        if (quizCorrectCount >= 10) {
-            unlockAchievement('クイズ見習い', 'badge6');
-        }
-
-        if (lastFailedQuizId === currentQuiz.id) {
-            unlockAchievement('🧠 リベンジ成功', 'badge7');
-            lastFailedQuizId = null;
-        }
-
-        addExpWithPeriod(20);
+        handleQuizSuccess(resultDisplay);
     } else {
-        resultDisplay.style.color = "var(--pink-neon)";
-        // 表示時の正解テキストからも {} を綺麗に消して表示
-        resultDisplay.innerText = `❌ 不正解... 正解: 「${cleanAnswer}」`;
-        lastFailedQuizId = currentQuiz.id;
-        insertWeaknessToList(`${currentQuiz.q} | ${cleanAnswer}`, currentQuiz.genre || "国語");
+        handleQuizFailure(resultDisplay, cleanAnswer, currentQuiz);
     }
 
     if (currentQuiz.explanation) {
@@ -723,6 +732,68 @@ function submitQuizAnswer(event) {
         currentQuizIndex = (currentQuizIndex + 1) % list.length;
         loadQuizQuestion();
     }, 2500);
+}
+
+// ◯✕自己採点回答処理
+function submitMarubatsuAnswer(isCorrect, event) {
+    if (event) event.stopPropagation();
+
+    const list = getFilteredQuizList();
+    const resultDisplay = document.getElementById('quizResultText');
+    const expDisplay = document.getElementById('quizExplanationText');
+    const circleBtn = document.getElementById('mbBtnCircle');
+    const crossBtn = document.getElementById('mbBtnCross');
+
+    if (list.length === 0) return;
+
+    if (circleBtn) circleBtn.disabled = true;
+    if (crossBtn) crossBtn.disabled = true;
+
+    const currentQuiz = list[currentQuizIndex];
+    const cleanAnswer = (currentQuiz.a || '').replace(/[{}]/g, '');
+
+    if (isCorrect) {
+        handleQuizSuccess(resultDisplay);
+    } else {
+        handleQuizFailure(resultDisplay, cleanAnswer, currentQuiz);
+    }
+
+    if (currentQuiz.explanation) {
+        expDisplay.innerText = `💡 解説: ${currentQuiz.explanation}`;
+        expDisplay.style.display = "block";
+    }
+
+    setTimeout(() => {
+        currentQuizIndex = (currentQuizIndex + 1) % list.length;
+        loadQuizQuestion();
+    }, 2500);
+}
+
+// 正解共通処理
+function handleQuizSuccess(resultDisplay) {
+    resultDisplay.style.color = "var(--green-neon)";
+    resultDisplay.innerText = "⭕ 正解！ (+20XP)";
+    
+    quizCorrectCount++;
+    if (quizCorrectCount >= 10) {
+        unlockAchievement('クイズ見習い', 'badge6');
+    }
+
+    const currentQuiz = getFilteredQuizList()[currentQuizIndex];
+    if (lastFailedQuizId === currentQuiz.id) {
+        unlockAchievement('🧠 リベンジ成功', 'badge7');
+        lastFailedQuizId = null;
+    }
+
+    addExpWithPeriod(20);
+}
+
+// 不正解共通処理
+function handleQuizFailure(resultDisplay, cleanAnswer, currentQuiz) {
+    resultDisplay.style.color = "var(--pink-neon)";
+    resultDisplay.innerText = `❌ 不正解... 正解: 「${cleanAnswer}」`;
+    lastFailedQuizId = currentQuiz.id;
+    insertWeaknessToList(`${currentQuiz.q} | ${cleanAnswer}`, currentQuiz.genre || "国語");
 }
 
 function toggleQuizForm(event) {
@@ -816,24 +887,8 @@ function renderQuizManageList() {
 // 🏆 アチーブメント描画・管理機能
 // ==========================================
 function renderAchievements() {
-    const container = document.getElementById('achievementList') || 
-                      document.getElementById('achievementContainer') ||
-                      document.getElementById('badgeContainer') ||
-                      document.querySelector('#card-achievement');
-
-    if (!container) return;
-
-    let listArea = container.querySelector('.achievement-list-inner');
-    if (!listArea) {
-        if (container.id === 'card-achievement') {
-            listArea = document.createElement('div');
-            listArea.className = 'achievement-list-inner';
-            listArea.style.marginTop = '12px';
-            container.appendChild(listArea);
-        } else {
-            listArea = container;
-        }
-    }
+    const listArea = document.getElementById('achievementList');
+    if (!listArea) return;
 
     listArea.innerHTML = "";
 
