@@ -58,7 +58,6 @@ let currentQuizIndex = 0;
 let currentQuizFilter = "すべて";
 let currentQuizMode = 'text'; // 'text' または 'marubatsu'
 let quizOrderMode = 'sequential'; // 'sequential' (順番) または 'random' (ランダム)
-let isAnswerRevealed = false;
 
 // ==========================================
 // 🆔 プレイヤーID管理（端末ごとに固定）
@@ -669,6 +668,8 @@ function nextQuizIndex(listLength) {
 }
 
 function loadQuizQuestion() {
+    resetQuizAnswerState();
+
     const list = getFilteredQuizList();
     const qText = document.getElementById('quizQuestionText');
     const rText = document.getElementById('quizResultText');
@@ -692,10 +693,16 @@ function loadQuizQuestion() {
     }
 
     if (qText) qText.innerText = displayQuestion;
-    if (rText) rText.innerText = "";
-    if (eText) eText.style.display = "none";
 
-    isAnswerRevealed = false;
+    const cleanAnswer = (currentQuiz.a || '').replace(/[{}]/g, '');
+    if (rText) {
+        rText.style.color = "var(--text-main, #fff)";
+        rText.innerText = `💡 正解: 「${cleanAnswer}」`;
+    }
+
+    if (eText) {
+        eText.innerText = currentQuiz.explanation ? `💡 解説: ${currentQuiz.explanation}` : "";
+    }
 
     // 記述入力状態のリセット
     const answerInput = document.getElementById('userQuizAnswer');
@@ -706,54 +713,6 @@ function loadQuizQuestion() {
 
     const submitBtn = document.getElementById('submitAnswerBtn');
     if (submitBtn) submitBtn.disabled = false;
-
-    // 答え表示ボタンのリセット
-    const revealBtn = document.getElementById('revealAnswerBtn');
-    if (revealBtn) {
-        revealBtn.style.display = 'inline-block';
-        revealBtn.disabled = false;
-    }
-
-    // ◯✕ボタンの状態リセット（答えを見るまでは押せない）
-    const circleBtn = document.getElementById('mbBtnCircle');
-    const crossBtn = document.getElementById('mbBtnCross');
-    if (circleBtn) circleBtn.disabled = true;
-    if (crossBtn) crossBtn.disabled = true;
-}
-
-// 答え表示処理
-function revealQuizAnswer(event) {
-    if (event) event.stopPropagation();
-
-    const list = getFilteredQuizList();
-    const rText = document.getElementById('quizResultText');
-    const eText = document.getElementById('quizExplanationText');
-
-    if (list.length === 0) return;
-
-    const currentQuiz = list[currentQuizIndex];
-    const cleanAnswer = (currentQuiz.a || '').replace(/[{}]/g, '');
-
-    if (rText) {
-        rText.style.color = "var(--text-main, #fff)";
-        rText.innerText = `💡 正解: 「${cleanAnswer}」`;
-    }
-
-    if (currentQuiz.explanation && eText) {
-        eText.innerText = `💡 解説: ${currentQuiz.explanation}`;
-        eText.style.display = "block";
-    }
-
-    // ◯✕ボタンの有効化と答え表示ボタンの非効化
-    const circleBtn = document.getElementById('mbBtnCircle');
-    const crossBtn = document.getElementById('mbBtnCross');
-    if (circleBtn) circleBtn.disabled = false;
-    if (crossBtn) crossBtn.disabled = false;
-
-    const revealBtn = document.getElementById('revealAnswerBtn');
-    if (revealBtn) revealBtn.disabled = true;
-
-    isAnswerRevealed = true;
 }
 
 function normalizeAnswer(str) {
@@ -793,7 +752,8 @@ function submitQuizAnswer(event) {
         handleQuizFailure(resultDisplay, cleanAnswer, currentQuiz);
     }
 
-    if (currentQuiz.explanation) {
+    resultDisplay.style.display = "block";
+    if (currentQuiz.explanation && expDisplay) {
         expDisplay.innerText = `💡 解説: ${currentQuiz.explanation}`;
         expDisplay.style.display = "block";
     }
@@ -811,13 +771,8 @@ function submitMarubatsuAnswer(isCorrect, event) {
     const list = getFilteredQuizList();
     const resultDisplay = document.getElementById('quizResultText');
     const expDisplay = document.getElementById('quizExplanationText');
-    const circleBtn = document.getElementById('mbBtnCircle');
-    const crossBtn = document.getElementById('mbBtnCross');
 
-    if (list.length === 0 || !isAnswerRevealed) return;
-
-    if (circleBtn) circleBtn.disabled = true;
-    if (crossBtn) crossBtn.disabled = true;
+    if (list.length === 0) return;
 
     const currentQuiz = list[currentQuizIndex];
     const cleanAnswer = (currentQuiz.a || '').replace(/[{}]/g, '');
@@ -828,7 +783,8 @@ function submitMarubatsuAnswer(isCorrect, event) {
         handleQuizFailure(resultDisplay, cleanAnswer, currentQuiz);
     }
 
-    if (currentQuiz.explanation) {
+    resultDisplay.style.display = "block";
+    if (currentQuiz.explanation && expDisplay) {
         expDisplay.innerText = `💡 解説: ${currentQuiz.explanation}`;
         expDisplay.style.display = "block";
     }
@@ -1484,4 +1440,44 @@ function importPublicQuiz(quizDataStr, event) {
     } catch (e) {
         console.error("取り込みエラー:", e);
     }
+}
+
+// ==========================================
+// 👁️ 答え表示トグル & 初期化処理
+// ==========================================
+function toggleQuizAnswer(event) {
+    if (event) event.stopPropagation();
+
+    const btn = document.getElementById('revealAnswerBtn');
+    const resultDisplay = document.getElementById('quizResultText');
+    const expDisplay = document.getElementById('quizExplanationText');
+    const judgeArea = document.getElementById('selfJudgeBtns');
+
+    const isHidden = resultDisplay.style.display === 'none' || resultDisplay.style.display === '';
+
+    if (isHidden) {
+        resultDisplay.style.display = 'block';
+        if (expDisplay && expDisplay.innerText.trim() !== '') {
+            expDisplay.style.display = 'block';
+        }
+        if (judgeArea) judgeArea.style.display = 'flex';
+        btn.textContent = '答えを非表示にする';
+    } else {
+        resultDisplay.style.display = 'none';
+        if (expDisplay) expDisplay.style.display = 'none';
+        if (judgeArea) judgeArea.style.display = 'none';
+        btn.textContent = '答えを表示する';
+    }
+}
+
+function resetQuizAnswerState() {
+    const btn = document.getElementById('revealAnswerBtn');
+    const resultDisplay = document.getElementById('quizResultText');
+    const expDisplay = document.getElementById('quizExplanationText');
+    const judgeArea = document.getElementById('selfJudgeBtns');
+
+    if (btn) btn.textContent = '答えを表示する';
+    if (resultDisplay) resultDisplay.style.display = 'none';
+    if (expDisplay) expDisplay.style.display = 'none';
+    if (judgeArea) judgeArea.style.display = 'none';
 }
